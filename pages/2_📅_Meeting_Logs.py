@@ -130,8 +130,22 @@ def delete_meeting_dialog(row):
 # --------------------------------------------------------------------------
 df = fetch_meetings()
 
+top_l, top_r = st.columns([4, 1])
+with top_l:
+    section_header("Browse by Month", "Latest month is shown by default")
+with top_r:
+    if is_admin:
+        if st.button("➕ Add Meeting", use_container_width=True):
+            add_meeting_dialog()
+    else:
+        if st.button("🔄", help="Refresh", use_container_width=True):
+            fetch_meetings.clear()
+            st.rerun()
+
 if df.empty:
-    st.warning(
+    st.info(
+        "No meetings yet. Click **➕ Add Meeting** above to create the first one."
+        if is_admin else
         "No meetings found, or the API server is unreachable. "
         "Make sure the FastAPI backend is running (`uvicorn main:app`)."
     )
@@ -145,18 +159,7 @@ else:
         .sort_values("sort_key", ascending=False)["month_year"].tolist()
     )
 
-    if is_admin:
-        top_l, top_r = st.columns([4, 1])
-        with top_l:
-            section_header("Browse by Month", "Latest month is shown by default")
-        with top_r:
-            if st.button("➕ Add Meeting", use_container_width=True):
-                add_meeting_dialog()
-    else:
-        section_header("Browse by Month", "Latest month is shown by default")
-
     selected_month = st.selectbox("Month", month_order, index=0, label_visibility="collapsed")
-
     month_df = df[df["month_year"] == selected_month]
 
     st.markdown(

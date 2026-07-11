@@ -24,7 +24,7 @@ def _get_config(key: str, default: str) -> str:
 API_BASE_URL = _get_config("API_BASE_URL", "http://localhost:8000")
 # --------------------------------------------------------------------------
 
-TIMEOUT = 8
+TIMEOUT = 65
 
 
 @st.cache_data(ttl=15, show_spinner=False)
