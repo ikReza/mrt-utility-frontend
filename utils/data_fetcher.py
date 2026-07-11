@@ -20,19 +20,12 @@ def fetch_overview_data():
         st.error(f"Error fetching Overview Google Sheet: {e}")
         return pd.DataFrame()
 
-@st.cache_data(ttl=30)
-def fetch_sheet_names(sheet_id):
-    """Fetches the names of all tabs in a Google Sheet by downloading it as an Excel file."""
-    url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=xlsx"
-    try:
-        response = requests.get(url)
-        response.raise_for_status()
-        # Read the Excel file from memory to get sheet names
-        xl_file = pd.ExcelFile(BytesIO(response.content))
-        return xl_file.sheet_names
-    except Exception as e:
-        print(f"Error fetching sheet names: {e}")
-        return []
+STATION_NAMES = [
+    "Nadda", "Natun Bazar"
+]
+
+def fetch_sheet_names(sheet_id=None):
+    return STATION_NAMES
 
 @st.cache_data(ttl=10)
 def fetch_station_details(station_name):
