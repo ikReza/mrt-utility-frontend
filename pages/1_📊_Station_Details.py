@@ -30,6 +30,6 @@ else:
     if not detail_df.empty:
         # Generate and display the Plotly chart
         fig_station = generate_station_corridor_plotly(detail_df, selected_station)
-        st.plotly_chart(fig_station, use_container_width=True)
+        st.plotly_chart(fig_station, width="stretch")
     else:
         st.error(f"Failed to load data for {selected_station}.")

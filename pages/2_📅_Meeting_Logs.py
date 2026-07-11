@@ -44,17 +44,17 @@ with col_hero:
 with col_gear:
     st.write("")
     st.write("")
-    with st.popover("⚙️", use_container_width=True):
+    with st.popover("⚙️", width="stretch"):
         if st.session_state.admin_authenticated:
             st.success("Admin mode is active.")
-            if st.button("Log out", use_container_width=True):
+            if st.button("Log out", width="stretch"):
                 st.session_state.admin_authenticated = False
                 st.session_state.admin_password = ""
                 st.rerun()
         else:
             st.markdown("**Admin Login**")
             pwd = st.text_input("Password", type="password", key="admin_pwd_input")
-            if st.button("Unlock", use_container_width=True):
+            if st.button("Unlock", width="stretch"):
                 ok, msg = verify_admin_password(pwd)
                 if ok:
                     st.session_state.admin_authenticated = True
@@ -76,7 +76,7 @@ def add_meeting_dialog():
     m_obj = st.text_input("Objective")
     m_att = st.text_input("Attendees", placeholder="Comma separated names")
     m_rem = st.text_area("Remarks", height=100)
-    if st.button("Save Meeting", type="primary", use_container_width=True):
+    if st.button("Save Meeting", type="primary", width="stretch"):
         if not (m_time and m_loc and m_obj and m_att):
             st.error("Please fill in time, location, objective and attendees.")
         else:
@@ -98,7 +98,7 @@ def edit_meeting_dialog(row):
     m_obj = st.text_input("Objective", value=row["objective"])
     m_att = st.text_input("Attendees", value=row["attendee"])
     m_rem = st.text_area("Remarks", value=row.get("remarks") or "", height=100)
-    if st.button("Save Changes", type="primary", use_container_width=True):
+    if st.button("Save Changes", type="primary", width="stretch"):
         payload = {
             "date": str(m_date), "time": m_time, "meeting_location": m_loc,
             "objective": m_obj, "remarks": m_rem, "attendee": m_att,
@@ -115,10 +115,10 @@ def delete_meeting_dialog(row):
                f"**{row['date'].strftime('%d %b %Y')}** ({row['objective']}).")
     c1, c2 = st.columns(2)
     with c1:
-        if st.button("Cancel", use_container_width=True):
+        if st.button("Cancel", width="stretch"):
             st.rerun()
     with c2:
-        if st.button("Delete", type="primary", use_container_width=True):
+        if st.button("Delete", type="primary", width="stretch"):
             ok, msg = delete_meeting(int(row["id"]))
             (st.success if ok else st.error)(msg)
             if ok:
@@ -135,10 +135,10 @@ with top_l:
     section_header("Browse by Month", "Latest month is shown by default")
 with top_r:
     if is_admin:
-        if st.button("➕ Add Meeting", use_container_width=True):
+        if st.button("➕ Add Meeting", width="stretch"):
             add_meeting_dialog()
     else:
-        if st.button("🔄", help="Refresh", use_container_width=True):
+        if st.button("🔄", help="Refresh", width="stretch"):
             fetch_meetings.clear()
             st.rerun()
 

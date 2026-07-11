@@ -56,7 +56,7 @@ if not df.empty:
     st.markdown("")
     st.markdown("### 📈 Station Progress Overview")
     fig = generate_plotly_chart(df)
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
     
     # --- Add the HTML Map Below ---
     st.markdown("---")
@@ -68,6 +68,6 @@ if not df.empty:
             html_content = f.read()
             
         # Render the HTML map in Streamlit
-        components.html(html_content, height=1130) # You can adjust the height here
+        st.iframe(html_content, height=1130) # You can adjust the height here
     except FileNotFoundError:
         st.warning("route_map.html not found. Please ensure it is in the same folder.")
