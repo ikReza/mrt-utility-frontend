@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+from datetime import datetime, time as time_type
 
 from utils.ui import apply_custom_css, hero, section_header, badge
 from utils.meetings_api import (
@@ -68,40 +69,52 @@ is_admin = st.session_state.admin_authenticated
 # --------------------------------------------------------------------------
 # Dialogs (add / edit / delete) — only reachable by an authenticated admin
 # --------------------------------------------------------------------------
+def _parse_time(time_str, default=time_type(9, 0)):
+    """Best-effort parse of a stored time string back into a time object,
+    so the edit dialog's time picker starts on the right value."""
+    if not time_str:
+        return default
+    for fmt in ("%I:%M %p", "%H:%M", "%I:%M%p", "%H:%M:%S"):
+        try:
+            return datetime.strptime(time_str.strip(), fmt).time()
+        except ValueError:
+            continue
+    return default
+
+
 @st.dialog("Add Meeting")
 def add_meeting_dialog():
     m_date = st.date_input("Date")
-    m_time = st.text_input("Time", placeholder="e.g. 10:30 AM")
+    m_time = st.time_input("Time", value=time_type(9, 0))
     m_loc = st.text_input("Location")
     m_obj = st.text_input("Objective")
     m_att = st.text_input("Attendees", placeholder="Comma separated names")
     m_rem = st.text_area("Remarks", height=100)
     if st.button("Save Meeting", type="primary", width="stretch"):
-        if not (m_time and m_loc and m_obj and m_att):
-            st.error("Please fill in time, location, objective and attendees.")
-        else:
-            payload = {
-                "date": str(m_date), "time": m_time, "meeting_location": m_loc,
-                "objective": m_obj, "remarks": m_rem, "attendee": m_att,
-            }
-            ok, msg = create_meeting(payload)
-            (st.success if ok else st.error)(msg)
-            if ok:
-                st.rerun()
+        payload = {
+            "date": str(m_date), "time": m_time.strftime("%I:%M %p"),
+            "meeting_location": m_loc, "objective": m_obj,
+            "remarks": m_rem, "attendee": m_att,
+        }
+        ok, msg = create_meeting(payload)
+        (st.success if ok else st.error)(msg)
+        if ok:
+            st.rerun()
 
 
 @st.dialog("Edit Meeting")
 def edit_meeting_dialog(row):
     m_date = st.date_input("Date", value=row["date"].date())
-    m_time = st.text_input("Time", value=row["time"])
+    m_time = st.time_input("Time", value=_parse_time(row["time"]))
     m_loc = st.text_input("Location", value=row["meeting_location"])
     m_obj = st.text_input("Objective", value=row["objective"])
     m_att = st.text_input("Attendees", value=row["attendee"])
     m_rem = st.text_area("Remarks", value=row.get("remarks") or "", height=100)
     if st.button("Save Changes", type="primary", width="stretch"):
         payload = {
-            "date": str(m_date), "time": m_time, "meeting_location": m_loc,
-            "objective": m_obj, "remarks": m_rem, "attendee": m_att,
+            "date": str(m_date), "time": m_time.strftime("%I:%M %p"),
+            "meeting_location": m_loc, "objective": m_obj,
+            "remarks": m_rem, "attendee": m_att,
         }
         ok, msg = update_meeting(int(row["id"]), payload)
         (st.success if ok else st.error)(msg)

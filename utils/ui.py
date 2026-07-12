@@ -198,6 +198,23 @@ def apply_custom_css():
             filter: brightness(1.06);
         }}
 
+        button[kind="primary"],
+        button[kind="primary"]:hover,
+        button[kind="primary"]:focus,
+        button[kind="primary"]:active {{
+            background: var(--gradient) !important;
+            color: #ffffff !important;
+            border: none !important;
+        }}
+        button[kind="primary"]:hover {{
+            filter: brightness(1.08);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px -6px rgba(91,91,246,0.55);
+        }}
+        button[kind="primary"] p {{
+            color: #ffffff !important;
+        }}
+
         /* inputs */
         .stTextInput input, .stTextArea textarea, .stDateInput input,
         .stSelectbox div[data-baseweb="select"] > div {{
