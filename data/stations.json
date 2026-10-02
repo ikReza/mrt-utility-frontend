@@ -1,0 +1,40 @@
+{
+  "S08": {
+    "name": "S08 – Natun Bazar",
+    "image": "images/S08-Natun Bazar.jpg",
+    "meta": ["MRT Line-1", "≈ 750 m per side"],
+    "boxes": {
+      "Section-1": {"x": 0.0,  "y": 10.0, "w": 33.0,  "h": 25.0, "group": "West corridor", "color": "#1F6FEB", "chip": "bl"},
+      "Section-2": {"x": 39.0, "y": 12.0, "w": 56.0,  "h": 22.0, "group": "West corridor", "color": "#8E44AD", "chip": "tl"},
+      "Section-3": {"x": 2.0,  "y": 66.0, "w": 18.5,  "h": 22.0, "group": "East corridor", "color": "#E67E22", "chip": "tl"},
+      "Section-4": {"x": 21.5, "y": 75.0, "w": 11.5,  "h": 25.0, "group": "East corridor", "color": "#8C564B", "chip": "tr"},
+      "Section-5": {"x": 39.0, "y": 68.0, "w": 58.0,  "h": 28.0, "group": "East corridor", "color": "#16A085", "critical": true, "chip": "bl"},
+      "Section-6": {"x": 33.0, "y": 15.0, "w": 5.5,   "h": 80.0, "group": "Road crossing", "color": "#C2185B", "chip": "c"},
+      "Section-7": {"x": 95.2, "y": 15.0, "w": 4.8,   "h": 58.0, "group": "Road crossing", "color": "#566573", "chip": "c"}
+    }
+  },
+  "S07": {
+    "name": "S07 – North Badda",
+    "image": "images/S07-North Badda.jpg",
+    "meta": ["MRT Line-1", "≈ 340 m per side"],
+    "boxes": {
+      "Corridor-1": {"x": 0.0,  "y": 2.0,  "w": 97.0, "h": 24.0, "group": "West corridor", "color": "#1F6FEB", "chip": "tl"},
+      "Corridor-2": {"x": 0.0,  "y": 27.0, "w": 97.0, "h": 24.0, "group": "West corridor", "color": "#8E44AD", "chip": "tl"},
+      "Corridor-3": {"x": 0.0,  "y": 53.0, "w": 97.0, "h": 27.0, "group": "East corridor", "color": "#E67E22", "chip": "tl"},
+      "Corridor-4": {"x": 0.0,  "y": 81.0, "w": 97.0, "h": 19.0, "group": "East corridor", "color": "#8C564B", "chip": "tl"},
+      "Corridor-5": {"x": 97.8, "y": 6.0,  "w": 2.0,  "h": 88.0, "group": "Road crossing", "color": "#E0348A", "chip": "c"}
+    }
+  },
+  "S06": {
+    "name": "S06 – Badda",
+    "image": "images/S06-Badda.jpg",
+    "meta": ["MRT Line-1", "≈ 360 m per side"],
+    "boxes": {
+      "Corridor-1": {"x": 3.5, "y": 2.0,  "w": 95.5, "h": 24.0, "group": "West corridor", "color": "#1F6FEB", "chip": "tl"},
+      "Corridor-2": {"x": 3.5, "y": 27.5, "w": 95.5, "h": 23.5, "group": "West corridor", "color": "#8E44AD", "chip": "tl"},
+      "Corridor-3": {"x": 3.5, "y": 53.0, "w": 95.5, "h": 27.0, "group": "East corridor", "color": "#E67E22", "chip": "tl"},
+      "Corridor-4": {"x": 3.5, "y": 81.0, "w": 95.5, "h": 19.0, "group": "East corridor", "color": "#8C564B", "chip": "tl"},
+      "Corridor-5": {"x": 0.1, "y": 6.0,  "w": 2.3,  "h": 88.0, "group": "Road crossing", "color": "#E0348A", "chip": "c"}
+    }
+  }
+}
