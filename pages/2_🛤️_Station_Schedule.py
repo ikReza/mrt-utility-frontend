@@ -12,8 +12,14 @@ apply_custom_css()
 st.markdown("""
 <style>
 .block-container{max-width:100% !important;padding-left:1.2rem !important;padding-right:1.2rem !important;}
-section[data-testid="stSidebar"] [data-baseweb="select"] > div{color:#fff !important;font-weight:600;}
-section[data-testid="stSidebar"] [data-testid="stWidgetLabel"] p{color:#cfd0e4 !important;}
+/* station dropdown: selected value + menu legible on the dark sidebar */
+section[data-testid="stSidebar"] [data-baseweb="select"] > div,
+section[data-testid="stSidebar"] [data-baseweb="select"] > div > div{
+  color:#ffffff !important; font-weight:600 !important;}
+section[data-testid="stSidebar"] [data-baseweb="select"] > div{
+  background-color:rgba(255,255,255,0.10) !important;
+  border:1px solid rgba(255,255,255,0.35) !important;}
+section[data-testid="stSidebar"] [data-baseweb="select"] svg{ fill:#ffffff !important; }
 </style>
 """, unsafe_allow_html=True)
 

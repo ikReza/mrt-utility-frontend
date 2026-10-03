@@ -18,11 +18,11 @@
     "image": "images/S07-North Badda.jpg",
     "meta": ["MRT Line-1", "≈ 340 m per side"],
     "boxes": {
-      "Corridor-1": {"x": 0.0,  "y": 2.0,  "w": 97.0, "h": 24.0, "group": "West corridor", "color": "#1F6FEB", "chip": "tl"},
-      "Corridor-2": {"x": 0.0,  "y": 27.0, "w": 97.0, "h": 24.0, "group": "West corridor", "color": "#8E44AD", "chip": "tl"},
-      "Corridor-3": {"x": 0.0,  "y": 53.0, "w": 97.0, "h": 27.0, "group": "East corridor", "color": "#E67E22", "chip": "tl"},
-      "Corridor-4": {"x": 0.0,  "y": 81.0, "w": 97.0, "h": 19.0, "group": "East corridor", "color": "#8C564B", "chip": "tl"},
-      "Corridor-5": {"x": 97.8, "y": 6.0,  "w": 2.0,  "h": 88.0, "group": "Road crossing", "color": "#E0348A", "chip": "c"}
+      "Corridor-1": {"x": 0.5,  "y": 13.0,  "w": 97.0, "h": 12.0, "group": "West corridor", "color": "#1F6FEB", "chip": "c"},
+      "Corridor-2": {"x": 0.5,  "y": 30.0, "w": 97.0, "h": 15.0, "group": "West corridor", "color": "#8E44AD", "chip": "c"},
+      "Corridor-3": {"x": 0.5,  "y": 60.0, "w": 97.0, "h": 15.0, "group": "East corridor", "color": "#E67E22", "chip": "c"},
+      "Corridor-4": {"x": 0.5,  "y": 81.0, "w": 97.0, "h": 12.0, "group": "East corridor", "color": "#8C564B", "chip": "c"},
+      "Corridor-5": {"x": 96.5, "y": 0.0,  "w": 3.0,  "h": 99.0, "group": "Road crossing", "color": "#E0348A", "chip": "br"}
     }
   },
   "S06": {
@@ -30,11 +30,11 @@
     "image": "images/S06-Badda.jpg",
     "meta": ["MRT Line-1", "≈ 360 m per side"],
     "boxes": {
-      "Corridor-1": {"x": 3.5, "y": 2.0,  "w": 95.5, "h": 24.0, "group": "West corridor", "color": "#1F6FEB", "chip": "tl"},
-      "Corridor-2": {"x": 3.5, "y": 27.5, "w": 95.5, "h": 23.5, "group": "West corridor", "color": "#8E44AD", "chip": "tl"},
-      "Corridor-3": {"x": 3.5, "y": 53.0, "w": 95.5, "h": 27.0, "group": "East corridor", "color": "#E67E22", "chip": "tl"},
-      "Corridor-4": {"x": 3.5, "y": 81.0, "w": 95.5, "h": 19.0, "group": "East corridor", "color": "#8C564B", "chip": "tl"},
-      "Corridor-5": {"x": 0.1, "y": 6.0,  "w": 2.3,  "h": 88.0, "group": "Road crossing", "color": "#E0348A", "chip": "c"}
+      "Corridor-1": {"x": 3.5, "y": 10.0,  "w": 96.0, "h": 15.0, "group": "West corridor", "color": "#1F6FEB", "chip": "c"},
+      "Corridor-2": {"x": 3.5, "y": 32.0, "w": 95.5, "h": 15.0, "group": "West corridor", "color": "#8E44AD", "chip": "c"},
+      "Corridor-3": {"x": 3.5, "y": 59.0, "w": 90.5, "h": 15.0, "group": "East corridor", "color": "#E67E22", "chip": "c"},
+      "Corridor-4": {"x": 3.5, "y": 82.0, "w": 90.0, "h": 12.0, "group": "East corridor", "color": "#8C564B", "chip": "c"},
+      "Corridor-5": {"x": 0.1, "y": 4.0,  "w": 4.5,  "h": 90.0, "group": "Road crossing", "color": "#E0348A", "chip": "c"}
     }
   }
 }

@@ -1,107 +1,107 @@
 station,section,cls,agency,description,start,end,total_len,done_len
-S08,Section-1,drain,DNCC,Drainage,2026-09-27,2026-10-10,230,0
-S08,Section-1,dwasa,DWASA,Water Supply,2026-10-11,2026-10-20,230,0
-S08,Section-1,titas,TITAS,Gas,2026-10-21,2026-11-10,230,0
-S08,Section-1,desco,DESCO,Electricity,2026-11-11,2026-11-20,230,0
-S08,Section-1,btcl,BTCL,Telecom,2026-11-21,2026-11-30,230,0
-S08,Section-1,priv,"GP, Robi, SCL, F@H etc.",Telecom,2026-12-01,2026-12-05,230,0
-S08,Section-1,road,Radiance,Backfilling + Road Restoration,2026-12-06,2026-12-30,230,0
-S08,Section-2,dwasa,DWASA,Water Supply,2026-09-27,2026-10-10,450,0
-S08,Section-2,titas,TITAS,Gas,2026-10-11,2026-10-31,450,0
-S08,Section-2,desco,DESCO,Electricity,2026-11-01,2026-11-10,450,0
-S08,Section-2,priv,"GP, Robi, SCL, F@H etc.",Telecom,2026-11-11,2026-11-20,450,0
-S08,Section-2,drain,DNCC,Drainage (manhole),2026-11-21,2026-11-30,450,0
-S08,Section-2,road,Radiance,Backfilling + Road Restoration,2026-12-01,2026-12-25,450,0
-S08,Section-3,titas,TITAS,Gas,2026-09-27,2026-10-15,130,0
-S08,Section-3,dwasa,DWASA,Water Supply,2026-10-16,2026-10-31,130,0
-S08,Section-3,desco,DESCO,Electricity,2026-11-01,2026-11-10,130,0
-S08,Section-3,btcl,BTCL,Telecom,2026-11-11,2026-11-15,130,0
-S08,Section-3,priv,"GP, SCL, F@H etc.",Telecom,2026-11-16,2026-11-20,130,0
-S08,Section-3,road,Radiance,Backfilling + Road Restoration,2026-11-21,2026-12-15,130,0
-S08,Section-4,civil,Radiance,Excavation + Bed Preparation,2026-10-01,2026-10-20,110,0
-S08,Section-4,drain,DNCC,Drainage,2026-10-21,2026-11-15,110,0
-S08,Section-4,titas,TITAS,Gas,2026-11-16,2026-11-25,110,0
-S08,Section-4,dwasa,DWASA,Water Supply,2026-11-26,2026-12-05,110,0
-S08,Section-4,priv,"GP, SCL, F@H etc.",Telecom,2026-12-06,2026-12-10,110,0
-S08,Section-4,road,Radiance,Backfilling + Road Restoration,2026-12-11,2026-12-31,110,0
-S08,Section-5,drain,DNCC,Drainage,2026-09-27,2026-10-16,460,0
-S08,Section-5,titas,TITAS,Gas,2026-10-17,2026-11-05,460,0
-S08,Section-5,dwasa,DWASA,Water Supply,2026-11-06,2026-11-17,460,0
-S08,Section-5,desco,DESCO,Electricity,2026-11-18,2026-11-29,460,0
-S08,Section-5,btcl,BTCL,Telecom,2026-11-30,2026-12-05,460,0
-S08,Section-5,priv,"GP, SCL, F@H etc.",Telecom,2026-12-06,2026-12-11,460,0
-S08,Section-5,road,Radiance,Backfilling + Road Restoration,2026-12-12,2026-12-31,460,0
-S08,Section-5,civil,Radiance,Footpath Construction,2026-12-22,2026-12-31,460,0
-S08,Section-5,desco,DESCO,Overhead Cable Relocation,2026-11-30,2026-12-17,460,0
-S08,Section-6,civil,Radiance,Excavation + Bed Preparation,2026-11-21,2026-11-25,60,0
-S08,Section-6,dwasa,DWASA,Water Supply,2026-11-26,2026-11-30,60,0
-S08,Section-6,titas,TITAS,Gas,2026-12-01,2026-12-05,60,0
-S08,Section-6,btcl,BTCL,Telecom,2026-12-06,2026-12-08,60,0
-S08,Section-6,priv,"GP, Robi, SCL, F@H etc.",Telecom,2026-12-08,2026-12-10,60,0
-S08,Section-6,desco,DESCO,Electricity,2026-12-11,2026-12-20,60,0
-S08,Section-6,road,Radiance,Backfilling + Road Restoration,2026-12-21,2026-12-31,60,0
-S08,Section-7,civil,Radiance,Excavation,2026-11-05,2026-11-10,30,0
-S08,Section-7,desco,DESCO,Electricity,2026-11-11,2026-11-15,30,0
-S08,Section-7,road,Radiance,Backfilling + Road Restoration,2026-11-16,2026-12-15,30,0
-S07,Corridor-1,civil,STC,Excavation + Bed Preparation,2026-11-21,2026-12-10,340,0
-S07,Corridor-1,drain,DNCC,Drainage,2026-12-11,2026-12-31,340,0
-S07,Corridor-1,dwasa,DWASA,Water Supply,2027-01-01,2027-01-10,340,0
-S07,Corridor-1,titas,TITAS,Gas,2027-01-11,2027-01-20,340,0
-S07,Corridor-1,road,STC,Backfilling + Road Restoration,2027-01-21,2027-02-10,340,0
-S07,Corridor-2,civil,STC,Excavation + Bed Preparation,2026-09-06,2026-10-15,340,0
-S07,Corridor-2,drain,DNCC,Drainage,2026-09-27,2026-10-22,340,0
-S07,Corridor-2,dwasa,DESWSP,Water Supply,2026-09-29,2026-10-25,340,0
-S07,Corridor-2,desco,DESCO,Electricity,2026-10-26,2026-11-04,340,0
-S07,Corridor-2,btcl,BTCL,Telecom,2026-11-05,2026-11-10,340,0
-S07,Corridor-2,priv,"GP, Robi, SCL, F@H etc.",Telecom,2026-11-05,2026-11-10,340,0
-S07,Corridor-2,road,STC,Backfilling + Road Restoration,2026-11-10,2026-11-20,340,0
-S07,Corridor-3,civil,STC,Excavation + Bed Preparation,2026-11-21,2026-12-08,340,0
-S07,Corridor-3,drain,DNCC,Drainage,2026-12-01,2026-12-18,340,0
-S07,Corridor-3,dwasa,DWASA,Water Supply,2026-12-19,2027-01-02,340,0
-S07,Corridor-3,titas,TITAS,Gas,2027-01-03,2027-01-18,340,0
-S07,Corridor-3,desco,DESCO,Electricity,2027-01-19,2027-01-28,340,0
-S07,Corridor-3,btcl,BTCL,Telecom,2027-01-29,2027-02-02,340,0
-S07,Corridor-3,priv,"GP, Robi, SCL, F@H etc.",Telecom,2027-01-29,2027-02-02,340,0
-S07,Corridor-3,road,STC,Backfilling + Road Restoration,2027-02-03,2027-02-22,340,0
-S07,Corridor-4,civil,STC,Excavation + Bed Preparation,2027-02-23,2027-03-15,340,0
-S07,Corridor-4,drain,DNCC,Drainage,2027-03-11,2027-03-20,340,0
-S07,Corridor-4,dwasa,DWASA,Water Supply,2027-03-21,2027-04-04,340,0
-S07,Corridor-4,btcl,BTCL,Telecom,2027-04-05,2027-04-09,340,0
-S07,Corridor-4,road,STC,Backfilling + Road Restoration,2027-04-10,2027-04-24,340,0
-S07,Corridor-5,civil,STC,Excavation + Bed Preparation,2027-04-05,2027-04-09,30,0
-S07,Corridor-5,dwasa,DWASA,Water Supply,2027-04-10,2027-04-14,30,0
-S07,Corridor-5,titas,TITAS,Gas,2027-04-15,2027-04-19,30,0
-S07,Corridor-5,btcl,BTCL,Telecom,2027-04-20,2027-04-20,30,0
-S07,Corridor-5,road,STC,Backfilling + Road Restoration,2027-04-21,2027-04-30,30,0
-S06,Corridor-1,civil,Sawa Enterprise,Excavation + Bed Preparation,2026-11-21,2026-12-20,360,0
-S06,Corridor-1,drain,DNCC,Drainage,2026-12-01,2026-12-25,360,0
-S06,Corridor-1,titas,TITAS,Gas,2026-12-26,2027-01-15,360,0
-S06,Corridor-1,dwasa,DWASA,Water Supply,2027-01-16,2027-01-31,360,0
-S06,Corridor-1,desco,DESCO,Electricity,2027-02-01,2027-02-10,360,0
-S06,Corridor-1,btcl,BTCL,Telecom,2027-02-11,2027-02-15,360,0
-S06,Corridor-1,road,Sawa Enterprise,Backfilling + Road Restoration,2027-02-16,2027-02-28,360,0
-S06,Corridor-2,civil,Sawa Enterprise,Excavation + Bed Preparation,2026-09-09,2026-10-15,360,0
-S06,Corridor-2,dwasa,DESWSP,Water Supply,2026-09-11,2026-10-20,360,0
-S06,Corridor-2,btcl,BTCL,Telecom,2026-10-26,2026-10-31,360,0
-S06,Corridor-2,priv,"GP, Robi, SCL, F@H etc.",Telecom,2026-10-20,2026-10-31,360,0
-S06,Corridor-2,desco,DESCO,Electricity,2026-11-01,2026-11-10,360,0
-S06,Corridor-2,road,Sawa Enterprise,Backfilling + Road Restoration,2026-11-11,2026-11-20,360,0
-S06,Corridor-3,civil,Sawa Enterprise,Excavation + Bed Preparation,2026-11-21,2026-12-20,360,0
-S06,Corridor-3,drain,DNCC,Drainage,2026-12-01,2026-12-25,360,0
-S06,Corridor-3,dwasa,DWASA,Water Supply,2026-12-26,2027-01-10,360,0
-S06,Corridor-3,titas,TITAS,Gas,2027-01-11,2027-01-31,360,0
-S06,Corridor-3,desco,DESCO,Electricity,2027-02-01,2027-02-05,360,0
-S06,Corridor-3,road,Sawa Enterprise,Backfilling + Road Restoration,2027-02-06,2027-02-20,360,0
-S06,Corridor-4,civil,Sawa Enterprise,Excavation + Bed Preparation,2027-02-21,2027-03-05,360,0
-S06,Corridor-4,dwasa,DWASA,Water Supply,2027-03-01,2027-03-25,360,0
-S06,Corridor-4,titas,TITAS,Gas,2027-03-05,2027-03-20,360,0
-S06,Corridor-4,btcl,BTCL,Telecom,2027-03-21,2027-03-25,360,0
-S06,Corridor-4,desco,DESCO,Electricity,2027-03-26,2027-03-31,360,0
-S06,Corridor-4,road,Sawa Enterprise,Backfilling + Road Restoration,2027-04-01,2027-04-15,360,0
-S06,Corridor-5,civil,Sawa Enterprise,Excavation + Bed Preparation,2027-03-16,2027-03-20,30,0
-S06,Corridor-5,drain,DNCC,Drainage,2027-03-21,2027-03-25,30,0
-S06,Corridor-5,priv,"GP, Robi, SCL, F@H etc.",Telecom,2027-03-26,2027-03-27,30,0
-S06,Corridor-5,dwasa,DWASA,Water Supply,2027-03-28,2027-04-05,30,0
-S06,Corridor-5,titas,TITAS,Gas,2027-04-06,2027-04-15,30,0
-S06,Corridor-5,btcl,BTCL,Telecom,2027-04-15,2027-04-17,30,0
-S06,Corridor-5,road,Sawa Enterprise,Backfilling + Road Restoration,2027-04-18,2027-04-25,30,0
+S08,Section-1,drain,DNCC,Drainage,9/27/2026,10/10/2026,230,0
+S08,Section-1,dwasa,DWASA,Water Supply,10/11/2026,10/20/2026,230,0
+S08,Section-1,titas,TITAS,Gas,10/21/2026,11/10/2026,230,0
+S08,Section-1,desco,DESCO,Electricity,11/11/2026,11/20/2026,230,0
+S08,Section-1,btcl,BTCL,Telecom,11/21/2026,11/30/2026,230,0
+S08,Section-1,priv,"GP, Robi, SCL, F@H etc.",Telecom,12/1/2026,12/5/2026,230,0
+S08,Section-1,road,Radiance,Backfilling + Road Restoration,12/6/2026,12/30/2026,230,0
+S08,Section-2,dwasa,DWASA,Water Supply,9/27/2026,10/10/2026,480,480
+S08,Section-2,titas,TITAS,Gas,10/11/2026,10/31/2026,480,0
+S08,Section-2,desco,DESCO,Electricity,11/1/2026,11/10/2026,480,0
+S08,Section-2,priv,"GP, Robi, SCL, F@H etc.",Telecom,11/11/2026,11/20/2026,480,0
+S08,Section-2,drain,DNCC,Drainage (manhole),11/21/2026,11/30/2026,480,0
+S08,Section-2,road,Radiance,Backfilling + Road Restoration,12/1/2026,12/25/2026,480,0
+S08,Section-3,titas,TITAS,Gas,9/27/2026,10/15/2026,130,0
+S08,Section-3,dwasa,DWASA,Water Supply,10/16/2026,10/31/2026,130,0
+S08,Section-3,desco,DESCO,Electricity,11/1/2026,11/10/2026,130,0
+S08,Section-3,btcl,BTCL,Telecom,11/11/2026,11/15/2026,130,0
+S08,Section-3,priv,"GP, SCL, F@H etc.",Telecom,11/16/2026,11/20/2026,130,0
+S08,Section-3,road,Radiance,Backfilling + Road Restoration,11/21/2026,12/15/2026,130,0
+S08,Section-4,civil,Radiance,Excavation + Bed Preparation,10/1/2026,10/20/2026,110,0
+S08,Section-4,drain,DNCC,Drainage,10/21/2026,11/15/2026,110,0
+S08,Section-4,titas,TITAS,Gas,11/16/2026,11/25/2026,110,0
+S08,Section-4,dwasa,DWASA,Water Supply,11/26/2026,12/5/2026,110,0
+S08,Section-4,priv,"GP, SCL, F@H etc.",Telecom,12/6/2026,12/10/2026,110,0
+S08,Section-4,road,Radiance,Backfilling + Road Restoration,12/11/2026,12/31/2026,110,0
+S08,Section-5,drain,DNCC,Drainage,9/27/2026,10/16/2026,460,0
+S08,Section-5,titas,TITAS,Gas,10/17/2026,11/5/2026,460,0
+S08,Section-5,dwasa,DWASA,Water Supply,11/6/2026,11/17/2026,460,0
+S08,Section-5,desco,DESCO,Electricity,11/18/2026,11/29/2026,460,0
+S08,Section-5,btcl,BTCL,Telecom,11/30/2026,12/5/2026,460,0
+S08,Section-5,priv,"GP, SCL, F@H etc.",Telecom,12/6/2026,12/11/2026,460,0
+S08,Section-5,road,Radiance,Backfilling + Road Restoration,12/12/2026,12/31/2026,460,0
+S08,Section-5,civil,Radiance,Footpath Construction,12/22/2026,12/31/2026,460,0
+S08,Section-5,desco,DESCO,Overhead Cable Relocation,11/30/2026,12/17/2026,460,0
+S08,Section-6,civil,Radiance,Excavation + Bed Preparation,11/21/2026,11/25/2026,80,0
+S08,Section-6,dwasa,DWASA,Water Supply,11/26/2026,11/30/2026,80,0
+S08,Section-6,titas,TITAS,Gas,12/1/2026,12/5/2026,80,0
+S08,Section-6,btcl,BTCL,Telecom,12/6/2026,12/8/2026,80,0
+S08,Section-6,priv,"GP, Robi, SCL, F@H etc.",Telecom,12/8/2026,12/10/2026,80,0
+S08,Section-6,desco,DESCO,Electricity,12/11/2026,12/20/2026,80,0
+S08,Section-6,road,Radiance,Backfilling + Road Restoration,12/21/2026,12/31/2026,80,0
+S08,Section-7,civil,Radiance,Excavation,11/5/2026,11/10/2026,30,0
+S08,Section-7,desco,DESCO,Electricity,11/11/2026,11/15/2026,30,0
+S08,Section-7,road,Radiance,Backfilling + Road Restoration,11/16/2026,12/15/2026,30,0
+S07,Corridor-1,civil,STC,Excavation + Bed Preparation,11/21/2026,12/10/2026,340,0
+S07,Corridor-1,drain,DNCC,Drainage,12/11/2026,12/31/2026,340,0
+S07,Corridor-1,dwasa,DWASA,Water Supply,1/1/2027,1/10/2027,340,0
+S07,Corridor-1,titas,TITAS,Gas,1/11/2027,1/20/2027,340,0
+S07,Corridor-1,road,STC,Backfilling + Road Restoration,1/21/2027,2/10/2027,340,0
+S07,Corridor-2,civil,STC,Excavation + Bed Preparation,9/6/2026,10/15/2026,340,72
+S07,Corridor-2,drain,DNCC,Drainage,9/27/2026,10/22/2026,340,36
+S07,Corridor-2,dwasa,DESWSP,Water Supply,9/29/2026,10/25/2026,340,60
+S07,Corridor-2,desco,DESCO,Electricity,10/26/2026,11/4/2026,340,0
+S07,Corridor-2,btcl,BTCL,Telecom,11/5/2026,11/10/2026,340,0
+S07,Corridor-2,priv,"GP, Robi, SCL, F@H etc.",Telecom,11/5/2026,11/10/2026,340,0
+S07,Corridor-2,road,STC,Backfilling + Road Restoration,11/10/2026,11/20/2026,340,0
+S07,Corridor-3,civil,STC,Excavation + Bed Preparation,11/21/2026,12/8/2026,340,0
+S07,Corridor-3,drain,DNCC,Drainage,12/1/2026,12/18/2026,340,0
+S07,Corridor-3,dwasa,DWASA,Water Supply,12/19/2026,1/2/2027,340,0
+S07,Corridor-3,titas,TITAS,Gas,1/3/2027,1/18/2027,340,0
+S07,Corridor-3,desco,DESCO,Electricity,1/19/2027,1/28/2027,340,0
+S07,Corridor-3,btcl,BTCL,Telecom,1/29/2027,2/2/2027,340,0
+S07,Corridor-3,priv,"GP, Robi, SCL, F@H etc.",Telecom,1/29/2027,2/2/2027,340,0
+S07,Corridor-3,road,STC,Backfilling + Road Restoration,2/3/2027,2/22/2027,340,0
+S07,Corridor-4,civil,STC,Excavation + Bed Preparation,2/23/2027,3/15/2027,340,0
+S07,Corridor-4,drain,DNCC,Drainage,3/11/2027,3/20/2027,340,0
+S07,Corridor-4,dwasa,DWASA,Water Supply,3/21/2027,4/4/2027,340,0
+S07,Corridor-4,btcl,BTCL,Telecom,4/5/2027,4/9/2027,340,0
+S07,Corridor-4,road,STC,Backfilling + Road Restoration,4/10/2027,4/24/2027,340,0
+S07,Corridor-5,civil,STC,Excavation + Bed Preparation,4/5/2027,4/9/2027,30,0
+S07,Corridor-5,dwasa,DWASA,Water Supply,4/10/2027,4/14/2027,30,0
+S07,Corridor-5,titas,TITAS,Gas,4/15/2027,4/19/2027,30,0
+S07,Corridor-5,btcl,BTCL,Telecom,4/20/2027,4/20/2027,30,0
+S07,Corridor-5,road,STC,Backfilling + Road Restoration,4/21/2027,4/30/2027,30,0
+S06,Corridor-1,civil,Sawa Enterprise,Excavation + Bed Preparation,11/21/2026,12/20/2026,360,0
+S06,Corridor-1,drain,DNCC,Drainage,12/1/2026,12/25/2026,360,0
+S06,Corridor-1,titas,TITAS,Gas,12/26/2026,1/15/2027,360,0
+S06,Corridor-1,dwasa,DWASA,Water Supply,1/16/2027,1/31/2027,360,0
+S06,Corridor-1,desco,DESCO,Electricity,2/1/2027,2/10/2027,360,0
+S06,Corridor-1,btcl,BTCL,Telecom,2/11/2027,2/15/2027,360,0
+S06,Corridor-1,road,Sawa Enterprise,Backfilling + Road Restoration,2/16/2027,2/28/2027,360,0
+S06,Corridor-2,civil,Sawa Enterprise,Excavation + Bed Preparation,9/9/2026,10/15/2026,360,100
+S06,Corridor-2,dwasa,DESWSP,Water Supply,9/11/2026,10/20/2026,360,100
+S06,Corridor-2,btcl,BTCL,Telecom,10/26/2026,10/31/2026,360,0
+S06,Corridor-2,priv,"GP, Robi, SCL, F@H etc.",Telecom,10/20/2026,10/31/2026,360,0
+S06,Corridor-2,desco,DESCO,Electricity,11/1/2026,11/10/2026,360,0
+S06,Corridor-2,road,Sawa Enterprise,Backfilling + Road Restoration,11/11/2026,11/20/2026,360,0
+S06,Corridor-3,civil,Sawa Enterprise,Excavation + Bed Preparation,11/21/2026,12/20/2026,360,0
+S06,Corridor-3,drain,DNCC,Drainage,12/1/2026,12/25/2026,360,0
+S06,Corridor-3,dwasa,DWASA,Water Supply,12/26/2026,1/10/2027,360,0
+S06,Corridor-3,titas,TITAS,Gas,1/11/2027,1/31/2027,360,0
+S06,Corridor-3,desco,DESCO,Electricity,2/1/2027,2/5/2027,360,0
+S06,Corridor-3,road,Sawa Enterprise,Backfilling + Road Restoration,2/6/2027,2/20/2027,360,0
+S06,Corridor-4,civil,Sawa Enterprise,Excavation + Bed Preparation,2/21/2027,3/5/2027,360,0
+S06,Corridor-4,dwasa,DWASA,Water Supply,3/1/2027,3/25/2027,360,0
+S06,Corridor-4,titas,TITAS,Gas,3/5/2027,3/20/2027,360,0
+S06,Corridor-4,btcl,BTCL,Telecom,3/21/2027,3/25/2027,360,0
+S06,Corridor-4,desco,DESCO,Electricity,3/26/2027,3/31/2027,360,0
+S06,Corridor-4,road,Sawa Enterprise,Backfilling + Road Restoration,4/1/2027,4/15/2027,360,0
+S06,Corridor-5,civil,Sawa Enterprise,Excavation + Bed Preparation,3/16/2027,3/20/2027,30,0
+S06,Corridor-5,drain,DNCC,Drainage,3/21/2027,3/25/2027,30,0
+S06,Corridor-5,priv,"GP, Robi, SCL, F@H etc.",Telecom,3/26/2027,3/27/2027,30,0
+S06,Corridor-5,dwasa,DWASA,Water Supply,3/28/2027,4/5/2027,30,0
+S06,Corridor-5,titas,TITAS,Gas,4/6/2027,4/15/2027,30,0
+S06,Corridor-5,btcl,BTCL,Telecom,4/15/2027,4/17/2027,30,0
+S06,Corridor-5,road,Sawa Enterprise,Backfilling + Road Restoration,4/18/2027,4/25/2027,30,0
