@@ -398,12 +398,54 @@ def apply_custom_css():
 
         /* ---------- mobile ---------- */
         @media(max-width: 640px) {{
-            .block-container {{ padding-top: .6rem; padding-bottom: 1.6rem; max-width: 100%; }}
+            .block-container {{ padding-top: 3.4rem; padding-bottom: 1.6rem; max-width: 100%; }}
             .hero {{ padding: 10px 14px; gap: 8px; }}
             .hero-title {{ font-size: .88rem; }}
             .hero-subtitle {{ text-align: left; margin: 0; flex-basis: 100%; }}
             .section-header h3 {{ font-size: .9rem !important; }}
         }}
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    # Make the sidebar open/close buttons clearly visible on the dark theme
+    # (covers different Streamlit versions' test-ids). Plain string, NOT f-string.
+    st.markdown(
+        """
+        <style>
+        header[data-testid="stHeader"] { visibility: visible !important; z-index: 999990; }
+        [data-testid="stExpandSidebarButton"],
+        [data-testid="collapsedControl"],
+        [data-testid="stSidebarCollapsedControl"],
+        [data-testid="stSidebarCollapseButton"] button,
+        [data-testid="stSidebarHeader"] button {
+            visibility: visible !important;
+            opacity: 1 !important;
+            display: flex !important;
+            align-items: center; justify-content: center;
+            background: rgba(4,6,13,.92) !important;
+            border: 1px solid rgba(0,240,255,.5) !important;
+            border-radius: 10px !important;
+            box-shadow: 0 0 14px rgba(0,240,255,.3);
+            color: #00f0ff !important;
+            z-index: 999991 !important;
+        }
+        [data-testid="stExpandSidebarButton"] *,
+        [data-testid="collapsedControl"] *,
+        [data-testid="stSidebarCollapsedControl"] *,
+        [data-testid="stSidebarCollapseButton"] button *,
+        [data-testid="stSidebarHeader"] button * {
+            color: #00f0ff !important;
+            fill: #00f0ff !important;
+        }
+        @media(max-width:700px){
+            [data-testid="stExpandSidebarButton"],
+            [data-testid="collapsedControl"],
+            [data-testid="stSidebarCollapsedControl"] {
+                width: 44px; height: 44px; margin: 6px 0 0 8px;
+            }
+        }
         </style>
         """,
         unsafe_allow_html=True,

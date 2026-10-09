@@ -79,16 +79,19 @@ def generate_plotly_chart(df):
         plot_bgcolor='rgba(0,0,0,0)',
         paper_bgcolor='rgba(0,0,0,0)',
         font=dict(family=FONT_FAMILY, size=12, color=INK_MUTED),
+        dragmode=False,                       # ← disables drag zoom/pan
         xaxis=dict(
             title=dict(text="Work Progress (%)", font=dict(size=12, color=INK_MUTED, family=FONT_FAMILY)),
             range=[0, 115], showgrid=True, gridcolor=GRID, griddash='dot', zeroline=False,
             tickfont=dict(size=11, color=INK_MUTED, family=FONT_FAMILY),
             linecolor=AXIS, showline=True,
+            fixedrange=True,                  # ← no zoom/pan on this axis
         ),
         yaxis=dict(
             title=None, showgrid=False,
             tickfont=dict(size=12, color=INK, family=FONT_FAMILY),
             linecolor=AXIS, showline=True,
+            fixedrange=True,                  # ← no zoom/pan on this axis
         ),
         barmode='overlay',
         legend=dict(
