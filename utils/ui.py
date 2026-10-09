@@ -538,15 +538,14 @@ def apply_custom_css():
     # Metro-train loader + dark page background (prevents white flashes)
     st.markdown(_loader_css(), unsafe_allow_html=True)
 
-    # Embedded route map iframe (see Dashboard.py). Plain string (NOT f-string).
-    # Desktop: full width, height is set by the map itself (JS inside the iframe).
-    # Mobile: tall fixed viewport; the map pans / pinch-zooms inside it.
+    # Embedded iframes. Each is targeted by its own height (the hook set in components.html(...)),
+    # so one page's styling never leaks onto another. Plain string (NOT f-string).
+    #   height 1180 = route map (Dashboard.py): dark, centred, pans / pinch-zooms inside
+    #   height  900 = station schedule (utils/schedule.py): LIGHT content, framed as a panel
     st.markdown(
         """
         <style>
-        div[data-testid="stIFrame"] iframe,
-        .stIFrame iframe,
-        iframe[height="1180"] {
+        iframe[height="1180"], iframe[style*="height: 1180px"] {
             display: block;
             width: 100% !important;
             max-width: 1150px;
@@ -556,10 +555,25 @@ def apply_custom_css():
             border-radius: 14px;
             box-shadow: 0 0 40px rgba(0,240,255,.07);
         }
+        iframe[height="900"], iframe[style*="height: 900px"] {
+            display: block;
+            width: 100% !important;
+            max-width: none;
+            margin: 6px 0 0 0;
+            background: #f4f2ea;
+            border: 1px solid rgba(0,240,255,.45);
+            border-radius: 16px;
+            box-shadow: 0 0 0 4px rgba(0,240,255,.06),
+                        0 0 38px rgba(0,240,255,.18),
+                        0 22px 44px rgba(0,0,0,.5);
+        }
         @media(max-width:700px){
-            div[data-testid="stIFrame"] iframe, .stIFrame iframe, iframe[height="1180"] {
+            iframe[height="1180"], iframe[style*="height: 1180px"] {
                 height: 78vh !important;
                 min-height: 460px;
+                border-radius: 10px;
+            }
+            iframe[height="900"], iframe[style*="height: 900px"] {
                 border-radius: 10px;
             }
         }

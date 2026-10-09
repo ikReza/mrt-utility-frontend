@@ -1,7 +1,9 @@
 """Station schedule & progress dashboard — shared logic for the multipage app.
 
-Reads (from project root):
-    data/tasks.csv       schedule + lengths (total_len, done_len in metres)
+Reads:
+    Google Sheet         schedule + lengths (total_len, done_len in metres) via utils/sheet_source.py
+                         (falls back to data/tasks.csv if Google is unreachable)
+    (from project root):
     data/stations.json   station registry: image + corridor boundary boxes
     images/...           wide corridor drawings (paths from stations.json)
 
@@ -23,6 +25,8 @@ import streamlit as st
 import streamlit.components.v1 as components
 import datetime as dt
 
+from utils.sheet_source import read_tasks, tasks_asof
+
 ROOT = Path(__file__).resolve().parents[1]          # project root (folder of Dashboard.py)
 DATA_DIR = ROOT / "data"
 TASKS_CSV = DATA_DIR / "tasks.csv"
@@ -30,8 +34,9 @@ STATIONS_JSON = DATA_DIR / "stations.json"
 TEMPLATE = (Path(__file__).parent / "schedule_template.html").read_text(encoding="utf-8")
 
 def csv_asof() -> dt.date:
-    """'Plan reference' date = the day tasks.csv was last saved."""
-    return dt.date.fromtimestamp(TASKS_CSV.stat().st_mtime)
+    """'Plan reference' date = today (a Google Sheet has no file date)."""
+    return tasks_asof().date()
+
 
 AGENCY_COLOR = {
     "drain": "#2E7D46", "dwasa": "#0B6FA8", "titas": "#B8790A", "desco": "#B23A2E",
@@ -54,20 +59,26 @@ def load_stations() -> dict:
     return {}
 
 
-@st.cache_data
-def _read_csv(mtime: float) -> pd.DataFrame:        # mtime busts the cache when the CSV changes
-    df = pd.read_csv(TASKS_CSV, parse_dates=["start", "end"])
+def load_tasks() -> pd.DataFrame:
+    """Tasks from the Google Sheet (cached ~60 s inside read_tasks)."""
+    try:
+        df = read_tasks().copy()
+    except Exception as e:
+        st.error(f"Could not load tasks: {e}")
+        return pd.DataFrame()
+
     if "remarks" not in df.columns:
         df["remarks"] = ""
     df["remarks"] = df["remarks"].fillna("").astype(str)
+
+    # a mistyped date in the sheet would otherwise crash the page: skip those rows, but say so
+    bad = df["start"].isna() | df["end"].isna()
+    if bad.any():
+        rows = ", ".join(str(i + 2) for i in df.index[bad][:10])      # +2 = sheet row number
+        st.warning(f"{int(bad.sum())} sheet row(s) skipped: start/end is not a valid date "
+                   f"(sheet row {rows}{' …' if bad.sum() > 10 else ''}). Expected format m/d/yyyy.")
+        df = df[~bad].reset_index(drop=True)
     return df
-
-
-def load_tasks() -> pd.DataFrame:
-    if not TASKS_CSV.exists():
-        st.error("data/tasks.csv is missing (expected at project root).")
-        return pd.DataFrame()
-    return _read_csv(TASKS_CSV.stat().st_mtime)
 
 
 def enrich(df: pd.DataFrame, today: pd.Timestamp) -> pd.DataFrame:
@@ -232,13 +243,43 @@ def _b64(path: str, mtime: float) -> str:
     return f"data:{mime};base64," + base64.b64encode(p.read_bytes()).decode()
 
 
+# Injected into the embedded copy only (so it works whatever Streamlit version / CSS selectors are in use):
+#  - small side padding so content never touches the rounded frame edge
+#  - html background = the page's own paper colour (no stray strip at the edges)
+#  - the iframe element itself is framed from inside: full width, cyan border, rounded, glow
+PAD_X = 12   # px of horizontal breathing room (raise to 16-20 for more)
+
+_FRAME_CSS = (
+    "<style>html,body{margin:0!important}"
+    f"body{{padding-left:{PAD_X}px!important;padding-right:{PAD_X}px!important;box-sizing:border-box!important}}"
+    "</style>"
+)
+_FRAME_JS = (
+    "<script>(function(){try{"
+    "var c=getComputedStyle(document.body).backgroundColor;"
+    "if(c&&c!=='rgba(0, 0, 0, 0)'&&c!=='transparent'){document.documentElement.style.background=c;}"
+    "var fe=window.frameElement;"
+    "if(fe){var s=fe.style;"
+    "s.setProperty('display','block');s.setProperty('width','100%');s.setProperty('max-width','none');"
+    "s.setProperty('border','1px solid rgba(0,240,255,.45)');s.setProperty('border-radius','16px');"
+    "s.setProperty('box-shadow','0 0 0 4px rgba(0,240,255,.06),0 0 38px rgba(0,240,255,.18),0 22px 44px rgba(0,0,0,.5)');"
+    "s.setProperty('background',c&&c!=='rgba(0, 0, 0, 0)'?c:'#f4f2ea');}"
+    "}catch(e){}})();</script>"
+)
+
+
 def render_dashboard(payload: dict):
     data = json.dumps(payload).replace("</", "<\\/")
-    components.html(TEMPLATE.replace("__DATA__", data), height=900, scrolling=False)
+    html = TEMPLATE.replace("__DATA__", data)
+    html = html.replace("</head>", _FRAME_CSS + "</head>", 1) if "</head>" in html else _FRAME_CSS + html
+    html = html.replace("</body>", _FRAME_JS + "</body>", 1) if "</body>" in html else html + _FRAME_JS
+    # height=900 is also the CSS hook for iframe[height="900"] in utils/ui.py (the framed light panel)
+    components.html(html, height=900, scrolling=False)
 
 
 def admin_editor(df: pd.DataFrame, station_id: str):
-    """Field-engineer entry: edit Done m (and remarks); % is derived on save."""
+    """LEGACY (not used by the pages): edits the LOCAL data/tasks.csv only.
+    Progress is now entered in the Google Sheet, so saving here no longer changes what the app shows."""
     st.divider()
     with st.expander("✏️ Update completed length", expanded=True):
         st.caption("Enter **Done m** (actual lm, max = Total) per task — the item % is done ÷ total; "

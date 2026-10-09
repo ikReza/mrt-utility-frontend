@@ -191,7 +191,6 @@ df = fetch_overview_data()
 hero(
     eyebrow="Program Overview",
     title="🏠 Utility Relocation Dashboard",
-    subtitle="Real-time progress of utility relocation works across all stations",
 )
 
 if not df.empty:
