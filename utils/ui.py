@@ -5,6 +5,8 @@ Matched to the embedded route map: deep navy canvas, cyan/magenta neon,
 blueprint grid, Orbitron headings, JetBrains Mono body.
 """
 
+from urllib.parse import quote
+
 import streamlit as st
 
 
@@ -32,6 +34,57 @@ COLORS = {
     "pending": "#ff2e9a",                  # route map pending pink
     "gradient": "linear-gradient(90deg, #00f0ff 0%, #ff2e9a 55%, #ffcc33 100%)",
 }
+
+
+def _loader_css() -> str:
+    """Full-screen metro-train loader, shown while the script is running (> ~0.4 s)."""
+    svg = (
+        "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 420 140'>"
+        "<defs><linearGradient id='g' x1='0' x2='1'><stop offset='0' stop-color='#00f0ff'/>"
+        "<stop offset='1' stop-color='#ff2e9a'/></linearGradient></defs>"
+        "<text x='210' y='34' text-anchor='middle' fill='#00f0ff' font-size='13' font-weight='700' "
+        "letter-spacing='5' font-family='monospace'>LOADING"
+        "<animate attributeName='opacity' values='1;.35;1' dur='1.4s' repeatCount='indefinite'/></text>"
+        "<line x1='0' y1='104' x2='420' y2='104' stroke='#00f0ff' stroke-opacity='.55' stroke-width='2'/>"
+        "<line x1='0' y1='113' x2='420' y2='113' stroke='#00f0ff' stroke-opacity='.28' stroke-width='6' "
+        "stroke-dasharray='3 11'>"
+        "<animate attributeName='stroke-dashoffset' from='0' to='-28' dur='.6s' repeatCount='indefinite'/></line>"
+        "<g><animateTransform attributeName='transform' type='translate' from='-230 0' to='430 0' "
+        "dur='2.4s' repeatCount='indefinite'/>"
+        "<rect x='0' y='64' width='62' height='38' rx='8' fill='#0d1428' stroke='url(#g)' stroke-width='2'/>"
+        "<rect x='68' y='64' width='62' height='38' rx='8' fill='#0d1428' stroke='url(#g)' stroke-width='2'/>"
+        "<rect x='136' y='64' width='66' height='38' rx='14' fill='#0d1428' stroke='url(#g)' stroke-width='2'/>"
+        "<g fill='#00f0ff' fill-opacity='.85'>"
+        "<rect x='8' y='72' width='12' height='10' rx='2'/><rect x='25' y='72' width='12' height='10' rx='2'/>"
+        "<rect x='42' y='72' width='12' height='10' rx='2'/>"
+        "<rect x='76' y='72' width='12' height='10' rx='2'/><rect x='93' y='72' width='12' height='10' rx='2'/>"
+        "<rect x='110' y='72' width='12' height='10' rx='2'/>"
+        "<rect x='144' y='72' width='12' height='10' rx='2'/><rect x='161' y='72' width='12' height='10' rx='2'/>"
+        "<rect x='178' y='72' width='14' height='10' rx='5'/></g>"
+        "<ellipse cx='208' cy='88' rx='16' ry='7' fill='#00f0ff' fill-opacity='.28'/>"
+        "<circle cx='201' cy='88' r='3' fill='#ffffff'/>"
+        "<g fill='#ff2e9a'><circle cx='14' cy='104' r='4'/><circle cx='50' cy='104' r='4'/>"
+        "<circle cx='82' cy='104' r='4'/><circle cx='118' cy='104' r='4'/>"
+        "<circle cx='150' cy='104' r='4'/><circle cx='186' cy='104' r='4'/></g></g>"
+        "</svg>"
+    )
+    uri = "data:image/svg+xml," + quote(svg)
+    rule = (
+        "__SEL__::after{content:'';position:fixed;inset:0;z-index:999999;pointer-events:none;"
+        "background:url(\"__URI__\") center 44% / min(440px,88vw) auto no-repeat,rgba(4,6,13,.96);"
+        "opacity:0;animation:metroIn .25s ease .4s forwards}"
+    )
+    selectors = [
+        '.stApp[data-test-script-state="running"]',
+        '.stApp[data-teststate="running"]',
+        '.stApp:has([data-testid="stStatusWidget"])',
+    ]
+    rules = "".join(rule.replace("__SEL__", sel).replace("__URI__", uri) for sel in selectors)
+    return (
+        "<style>@keyframes metroIn{from{opacity:0}to{opacity:1}}"
+        "html,body,#root{background:#04060d!important}"
+        + rules + "</style>"
+    )
 
 
 def apply_custom_css():
@@ -481,6 +534,9 @@ def apply_custom_css():
         """,
         unsafe_allow_html=True,
     )
+
+    # Metro-train loader + dark page background (prevents white flashes)
+    st.markdown(_loader_css(), unsafe_allow_html=True)
 
     # Embedded route map iframe (see Dashboard.py). Plain string (NOT f-string).
     # Desktop: full width, height is set by the map itself (JS inside the iframe).
