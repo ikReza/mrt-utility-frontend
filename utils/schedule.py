@@ -5,7 +5,11 @@ Reads (from project root):
     data/stations.json   station registry: image + corridor boundary boxes
     images/...           wide corridor drawings (paths from stations.json)
 
-Progress % = done_len ÷ total_len × 100 (lengths are never displayed).
+Progress % = done_len ÷ total_len × 100 for a single work item.
+Roll-ups (section / station) are WEIGHTED: Σ(done_len × weight) ÷ Σ(total_len × weight).
+  total_len = actual length (lm)      weight = effort factor (default 1; BTCL / private cables 0.5)
+  e.g. 255 lm BTCL at weight 0.5 counts as 127.5 lm in the section total.
+done_len is entered in actual lm and can never exceed total_len.
 Planned % (black tick on bars) comes from schedule dates + the "Status as of" date.
 HTML template: utils/schedule_template.html  (__DATA__ placeholder gets the payload).
 """
@@ -35,6 +39,7 @@ AGENCY_COLOR = {
 }
 STATUS_COLOR = {"Completed": "#2E7D46", "In progress": "#B7791F",
                 "Delayed": "#C0392B", "Not started": "#8C887C"}
+GROUP_COLOR = {"west": "#1F6FEB", "east": "#E67E22", "road": "#C2185B"}   # corridor-group accent colours
 SEC_PALETTE = ["#1F6FEB", "#8E44AD", "#E67E22", "#8C564B", "#16A085", "#C2185B", "#566573"]
 DELAY_TOLERANCE = 10
 
@@ -75,7 +80,16 @@ def enrich(df: pd.DataFrame, today: pd.Timestamp) -> pd.DataFrame:
         if c not in df.columns:
             df[c] = 0
     df["total_len"] = pd.to_numeric(df["total_len"], errors="coerce").fillna(0)
-    df["done_len"] = pd.to_numeric(df["done_len"], errors="coerce").fillna(0)
+    df["done_len"] = pd.to_numeric(df["done_len"], errors="coerce").fillna(0).clip(lower=0)
+    # done can never exceed the total
+    df["done_len"] = df["done_len"].where(df["total_len"] <= 0, df["done_len"].clip(upper=df["total_len"]))
+
+    # weight (missing column / blank cell = 1) -> weighted lengths used for roll-ups
+    if "weight" not in df.columns:
+        df["weight"] = 1.0
+    df["weight"] = pd.to_numeric(df["weight"], errors="coerce").fillna(1.0).clip(lower=0)
+    df["w_total"] = df["total_len"] * df["weight"]
+    df["w_done"] = df["done_len"] * df["weight"]
 
     if "actual_pct" not in df.columns:
         df["actual_pct"] = 0.0
@@ -91,8 +105,8 @@ def wavg(g: pd.DataFrame, col: str) -> float:
 
 
 def length_pct(g: pd.DataFrame):
-    """Completed ÷ total metres for a group of tasks (None if lengths missing)."""
-    t, d = g["total_len"].sum(), g["done_len"].sum()
+    """Weighted completed ÷ weighted total metres for a group (None if lengths missing)."""
+    t, d = g["w_total"].sum(), g["w_done"].sum()
     if t > 0 and bool((g["total_len"] > 0).all()):
         return float(d / t * 100)
     return None
@@ -106,6 +120,28 @@ def status(actual: float, planned: float) -> str:
     return "In progress" if actual > 0 else "Not started"
 
 
+TIP_NAME = {"priv": "Pvt Cables", "drain": "DNCC Drainage"}
+
+
+def tip_groups(g: pd.DataFrame) -> list:
+    """Hover summary: one row per utility (all DESCO voltages / DWASA sizes / TITAS sizes combined).
+    DESWSP stays separate from DWASA because the agency differs. % = weighted done ÷ weighted total."""
+    out = []
+    for (cls, org), gg in g.sort_values("start").groupby(["cls", "agency"], sort=False):
+        if cls in ("civil", "road"):                      # Radiance: excavation vs backfilling
+            label = f"{org} – {gg['description'].iloc[0].split(' + ')[0]}"
+        else:
+            label = TIP_NAME.get(cls, org)
+        t, d = gg["w_total"].sum(), gg["w_done"].sum()
+        a = float(d / t * 100) if t > 0 else float(gg["actual_pct"].mean())
+        pl = wavg(gg, "planned_pct")
+        out.append(dict(name=label, color=AGENCY_COLOR.get(cls, "#57534A"),
+                        actual=round(a), planned=round(pl), status=status(a, pl),
+                        start=gg["start"].min()))
+    out.sort(key=lambda x: x.pop("start"))
+    return out
+
+
 def section_payload(df: pd.DataFrame) -> dict:
     out = {}
     for sec_name, g in df.groupby("section", sort=True):
@@ -116,12 +152,39 @@ def section_payload(df: pd.DataFrame) -> dict:
         out[sec_name] = dict(
             actual=round(a, 1), planned=round(p, 1), status=status(a, p),
             start=g["start"].min().strftime("%d %b"), end=g["end"].max().strftime("%d %b %Y"),
+            tip=tip_groups(g),
             tasks=[dict(agency=r.agency, desc=r.description,
                         start=r.start.strftime("%d %b"), end=r.end.strftime("%d %b"),
+                        weight=float(r.weight), wlen=round(float(r.w_total), 1),
                         days=int(r.days), actual=round(r.actual_pct), planned=round(r.planned_pct),
                         color=AGENCY_COLOR.get(r.cls, "#57534A"), remarks=r.remarks.strip(),
                         status=status(r.actual_pct, r.planned_pct))
                    for r in g.sort_values("start").itertuples()])
+    return out
+
+
+def group_payload(df: pd.DataFrame, station: dict) -> list:
+    """West / East / Road-crossing roll-ups. Membership comes from each box's "group" in stations.json
+    (e.g. Section-1,2 -> West corridor; Section-3,4,5 -> East corridor; Section-6,7 -> Road crossing).
+    % = weighted done / weighted total over every task of the member sections."""
+    members = {}
+    for k, b in station["boxes"].items():
+        members.setdefault(b.get("group") or "Other", []).append(k)
+    out = []
+    for i, (name, keys) in enumerate(members.items()):
+        gdf = df[df["section"].isin(keys)]
+        color = next((c for w, c in GROUP_COLOR.items() if w in name.lower()), SEC_PALETTE[i % len(SEC_PALETTE)])
+        if gdf.empty:
+            out.append(dict(name=name, color=color, sections=keys, actual=0, planned=0, status="Not started",
+                            start="—", end="—", tip=[]))
+            continue
+        a = length_pct(gdf)
+        if a is None:
+            a = wavg(gdf, "actual_pct")
+        pl = wavg(gdf, "planned_pct")
+        out.append(dict(name=name, color=color, sections=keys, actual=round(a, 1), planned=round(pl, 1),
+                        status=status(a, pl), start=gdf["start"].min().strftime("%d %b"),
+                        end=gdf["end"].max().strftime("%d %b %Y"), tip=tip_groups(gdf)))
     return out
 
 
@@ -146,6 +209,7 @@ def build_payload(df: pd.DataFrame, station_id: str, station: dict) -> dict:
         code=station_id, title=title,
         overall=round(ov, 1),
         status=STATUS_COLOR, sections=secs, boxes=boxes,
+        groups=group_payload(df, station),
         defaultSection=next(iter(boxes)),           # first corridor open on load
         image=image_uri(ROOT / station["image"]),
     )
@@ -177,16 +241,18 @@ def admin_editor(df: pd.DataFrame, station_id: str):
     """Field-engineer entry: edit Done m (and remarks); % is derived on save."""
     st.divider()
     with st.expander("✏️ Update completed length", expanded=True):
-        st.caption("Enter **Done m** per task — the % is calculated as done ÷ total. "
+        st.caption("Enter **Done m** (actual lm, max = Total) per task — the item % is done ÷ total; "
+                   "section totals apply each item's **Weight**. "
                    "Add **Remarks** only if there is an issue. Everything else is locked.")
         edit_cols = ["section", "agency", "description", "start", "end",
-                     "total_len", "done_len", "actual_pct", "remarks"]
+                     "total_len", "weight", "done_len", "actual_pct", "remarks"]
         edited = st.data_editor(
             df[edit_cols], hide_index=True, use_container_width=True, key=f"ed_{station_id}",
             disabled=[c for c in edit_cols if c not in ("done_len", "remarks")],
             column_config={
-                "total_len": st.column_config.NumberColumn("Total m", disabled=True),
-                "done_len": st.column_config.NumberColumn("Done m", min_value=0, step=5),
+                "total_len": st.column_config.NumberColumn("Total m", disabled=True, format="%.1f"),
+                "weight": st.column_config.NumberColumn("Weight", disabled=True, format="%.2f"),
+                "done_len": st.column_config.NumberColumn("Done m", min_value=0, step=0.5, format="%.1f"),
                 "actual_pct": st.column_config.NumberColumn("%", disabled=True, format="%.1f"),
                 "remarks": st.column_config.TextColumn("Remarks / issue")})
         if st.button("💾 Save progress", type="primary"):
@@ -199,7 +265,9 @@ def admin_editor(df: pd.DataFrame, station_id: str):
             raw.loc[edited.index, "done_len"] = pd.to_numeric(edited["done_len"], errors="coerce").fillna(0).values
             raw.loc[edited.index, "remarks"] = edited["remarks"].fillna("").astype(str).values
             tot = pd.to_numeric(raw["total_len"], errors="coerce").fillna(0)
-            dne = pd.to_numeric(raw["done_len"], errors="coerce").fillna(0)
+            dne = pd.to_numeric(raw["done_len"], errors="coerce").fillna(0).clip(lower=0)
+            dne = dne.where(tot <= 0, dne.clip(upper=tot))      # done ≤ total
+            raw["done_len"] = dne
             legacy = pd.to_numeric(raw.get("actual_pct", 0), errors="coerce").fillna(0)
             raw["actual_pct"] = (dne / tot * 100).where(tot > 0, legacy).round(1)
             raw.to_csv(TASKS_CSV, index=False)

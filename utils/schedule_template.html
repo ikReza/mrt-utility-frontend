@@ -66,6 +66,24 @@ h1{margin:0;font:600 22px/1.2 var(--sans);letter-spacing:-.01em;white-space:nowr
 .scard .pct{margin-left:auto;font:700 12.5px var(--mono)}
 .scard .meta{display:flex;align-items:center;gap:5px;margin-top:6px;font:500 9px var(--mono);color:var(--muted)}
 
+/* corridor-group summary (West / East / Road crossing) */
+.grps{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:8px;margin:0 0 12px}
+.gcard{background:var(--card);border:1px solid var(--line2);border-left:5px solid var(--gc);border-radius:10px;padding:9px 12px 10px;text-align:left;cursor:pointer;font:inherit;color:inherit;transition:border-color .12s,box-shadow .12s}
+.gcard:hover{border-color:#AFaa99;border-left-color:var(--gc)}
+.gcard.on{border-color:#26241E;border-left-color:var(--gc);box-shadow:inset 0 0 0 1px #26241E}
+.gcard .r1{display:flex;align-items:center;gap:8px;margin-bottom:7px}
+.gcard .nm{font:600 12.5px var(--sans)}
+.gcard .pct{margin-left:auto;font:700 18px var(--mono)}
+.gcard .meta{display:flex;align-items:center;gap:5px;margin-top:7px;font:500 9.5px var(--mono);color:var(--muted);flex-wrap:wrap}
+.box,.scard{transition:opacity .12s}
+.dim{opacity:.28}
+.srow{display:grid;grid-template-columns:minmax(110px,150px) minmax(120px,1fr) 70px 120px;gap:12px;align-items:center;width:100%;background:none;border:0;border-bottom:1px solid var(--line);padding:9px 16px;font:inherit;color:inherit;text-align:left;cursor:pointer}
+.srow:hover{background:#FBFAF6}
+.srow:last-child{border-bottom:0}
+.srow .nm{font:600 12px var(--mono);display:flex;align-items:center;gap:8px}
+.srow .pv{font:700 12px var(--mono);text-align:right}
+.sech{font:600 9px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:8px 16px;background:#FBFAF6;border-bottom:1px solid var(--line)}
+
 /* detail */
 .detail{overflow:hidden}
 .detail .ph{padding:26px 16px;text-align:center;font:500 12.5px var(--sans);color:var(--muted)}
@@ -120,6 +138,8 @@ td.pr .n{font:600 11px var(--mono);margin-bottom:4px}
     </div>
   </div>
 
+  <div class="grps" id="grps"></div>
+
   <div class="card map" id="mapcard">
     <div class="map-top"><span class="lbl">Corridor schematic</span></div>
     <div class="frame" id="frame">
@@ -140,7 +160,9 @@ const SC = P.status;
 const keys = Object.keys(P.boxes);
 let hover = null;
 let pinned = P.defaultSection;      // Section-1 open by default on first load
-let shown = null;                   // key currently rendered in the detail panel
+let shown = null;                   // what the detail panel currently shows (section key or 'g:<group>')
+let gpin = null, ghover = null;     // corridor group (West / East / Road crossing): clicked / hovered
+const G = {}; (P.groups || []).forEach(g => G[g.name] = g);
 
 const sec = k => P.sections[k] || {actual:0, planned:0, status:'Not started', tasks:[], start:'—', end:'—'};
 const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');
@@ -167,25 +189,26 @@ keys.forEach(key => {
   el.style.color = c;
   el.style.left = b.x + '%'; el.style.top = b.y + '%';
   el.style.width = b.w + '%'; el.style.height = b.h + '%';
-  el.style.background = 'linear-gradient(90deg,' + rgba(c,.45) + ' ' + s.actual + '%,' + rgba(c,.12) + ' ' + s.actual + '%)';
+  el.style.background = 'linear-gradient(90deg,' + rgba(c,.2) + ' ' + s.actual + '%,' + rgba(c,.05) + ' ' + s.actual + '%)';   // light fill (progress shade)
   el.innerHTML = `<span class="bchip"><span class="st" style="background:${SC[s.status]}"></span>${b.short}<b>${Math.round(s.actual)}%</b></span>`;
   el.onmouseenter = () => { hover = key; refresh(); showTip(key); };
   el.onmousemove = ev => moveTip(ev);
   el.onmouseleave = () => { hover = null; tip.style.display = 'none'; refresh(); };
-  el.onclick = ev => { ev.stopPropagation(); pinned = (pinned === key ? null : key); refresh(); };
+  el.onclick = ev => { ev.stopPropagation(); gpin = null; pinned = (pinned === key ? null : key); refresh(); };
   canvas.appendChild(el);
 });
-frame.onclick = () => { pinned = null; refresh(); };
-document.addEventListener('keydown', e => { if (e.key === 'Escape') { pinned = null; refresh(); } });
+frame.onclick = () => { pinned = null; gpin = null; refresh(); };
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { pinned = null; gpin = null; refresh(); } });
 
 function showTip(key) {
   const s = sec(key), b = P.boxes[key];
   let h = `<h4>${esc(b.label)}${b.critical ? ' <span class="tag">CRITICAL</span>' : ''}</h4>`
         + `<div class="tlbl">${Math.round(s.actual)}% · ${s.status}</div>`;
-  s.tasks.slice(0, 8).forEach(t => {
-    h += `<div class="tr"><i class="dot" style="background:${t.color}"></i><span class="n">${esc(t.agency)}</span>${bar(t.actual, t.planned, t.color, 'sm')}<em>${t.actual}%</em></div>`;
+  const rows = s.tip || s.tasks;                 // one row per utility (sizes / voltages combined)
+  rows.slice(0, 10).forEach(t => {
+    h += `<div class="tr"><i class="dot" style="background:${t.color}"></i><span class="n">${esc(t.name || t.agency)}</span>${bar(t.actual, t.planned, t.color, 'sm')}<em>${t.actual}%</em></div>`;
   });
-  const extra = s.tasks.length > 8 ? `+ ${s.tasks.length - 8} more · ` : '';
+  const extra = rows.length > 10 ? `+ ${rows.length - 10} more · ` : '';
   h += `<div class="more">${extra}click to open the full work list</div>`;
   tip.innerHTML = h; tip.style.display = 'block';
 }
@@ -210,8 +233,48 @@ function moveTip(ev) {
  $$('.scard').forEach(el => {
   el.onmouseenter = () => { hover = el.dataset.k; refresh(); };
   el.onmouseleave = () => { hover = null; refresh(); };
-  el.onclick = () => { pinned = (pinned === el.dataset.k ? null : el.dataset.k); refresh(); };
+  el.onclick = () => { gpin = null; pinned = (pinned === el.dataset.k ? null : el.dataset.k); refresh(); };
 });
+
+/* corridor-group cards */
+ $('#grps').innerHTML = (P.groups || []).map(g => `<button class="gcard" data-g="${esc(g.name)}" style="--gc:${g.color}">
+    <div class="r1"><span class="nm">${esc(g.name)}</span><span class="pct" style="color:${g.status === 'Delayed' ? SC.Delayed : 'inherit'}">${g.actual.toFixed(1)}%</span></div>
+    ${bar(g.actual, g.planned, g.color)}
+    <div class="meta"><span class="st" style="background:${SC[g.status]}"></span>${g.status} · plan ${Math.round(g.planned)}% · ${g.sections.map(k => (P.boxes[k] || {}).short || k).join(' ')}</div>
+  </button>`).join('');
+ $$('.gcard').forEach(el => {
+  el.onmouseenter = () => { ghover = el.dataset.g; refresh(); };
+  el.onmouseleave = () => { ghover = null; refresh(); };
+  el.onclick = () => { pinned = null; gpin = (gpin === el.dataset.g ? null : el.dataset.g); refresh(); };
+});
+
+/* detail panel for a corridor group: utility-wise roll-up + its sections */
+function renderGroup(name) {
+  const g = G[name];
+  $('#detail').innerHTML = `
+  <div class="dh">
+    <div><h2><span class="dot lg" style="background:${g.color}"></span>${esc(g.name)} ${pill(g.status)}</h2>
+      <div class="sub">${g.sections.map(esc).join(' + ').toUpperCase()} · ${g.start} → ${g.end}</div></div>
+    <div class="dr">
+      <div class="pc">${g.actual.toFixed(1)}%<small>PLAN ${Math.round(g.planned)}%</small></div>
+      <button class="clx" id="clx">✕ close</button>
+    </div>
+  </div>
+  <div class="dbar">${bar(g.actual, g.planned, SC[g.status])}</div>
+  <div class="sech">Sections</div>
+  ${g.sections.map(k => { const s = sec(k), b = P.boxes[k] || {color:'#888'}; return `<button class="srow" data-open="${esc(k)}">
+      <span class="nm"><i class="dot" style="background:${b.color}"></i>${esc(k)}</span>
+      ${bar(s.actual, s.planned, b.color, 'sm')}
+      <span class="pv">${Math.round(s.actual)}%</span><span>${pill(s.status)}</span></button>`; }).join('')}
+  <div class="sech">Utility-wise (all sizes / voltages combined)</div>
+  ${(g.tip || []).map(t => `<div class="srow" style="cursor:default">
+      <span class="nm"><i class="dot" style="background:${t.color}"></i>${esc(t.name)}</span>
+      ${bar(t.actual, t.planned, t.color, 'sm')}
+      <span class="pv">${t.actual}%</span><span>${pill(t.status)}</span></div>`).join('')}`;
+  $$('[data-open]').forEach(el => el.onclick = () => { gpin = null; pinned = el.dataset.open; refresh(); });
+  const x = document.getElementById('clx');
+  if (x) x.onclick = () => { pinned = null; gpin = null; refresh(); };
+}
 
 /* detail panel — rendered for the CLICKED (pinned) corridor */
 function renderDetail(key) {
@@ -227,30 +290,40 @@ function renderDetail(key) {
   </div>
   <div class="dbar">${bar(s.actual, s.planned, SC[s.status])}</div>
   <div style="overflow-x:auto"><table>
-    <tr><th>Agency</th><th>Work</th><th>Schedule</th><th>Progress</th><th>Status</th></tr>
+    <tr><th>Agency</th><th>Work</th><th>Weight</th><th>Schedule</th><th>Progress</th><th>Status</th></tr>
     ${(s.tasks || []).map(t => `<tr>
-      <td class="ag"><i class="dot" style="background:${t.color}"></i>${esc(t.agency)}</td>
+      <td class="ag"><i class="dot" style="background:${t.color}"></i>${esc(t.org || t.agency)}</td>
       <td>${esc(t.desc)}${t.remarks ? `<div class="rm">⚠ ${esc(t.remarks)}</div>` : ''}</td>
+      <td class="dts">×${t.weight}<small>${t.wlen} lm</small></td>
       <td class="dts">${t.start} → ${t.end}<small>${t.days} days</small></td>
       <td class="pr"><div class="n">${t.actual}%</div>${bar(t.actual, t.planned, t.color, 'sm')}</td>
       <td>${pill(t.status)}</td></tr>`).join('')}
   </table></div>`;
   const x = document.getElementById('clx');
-  if (x) x.onclick = () => { pinned = null; refresh(); };
+  if (x) x.onclick = () => { pinned = null; gpin = null; refresh(); };
 }
 function renderPlaceholder() {
-  $('#detail').innerHTML = '<div class="ph">Click a corridor on the schematic — or a card above — to open its agency-wise work list.</div>';
+  $('#detail').innerHTML = '<div class="ph">Click a corridor on the schematic — or a card above — to open its agency-wise work list. Click West / East / Road crossing for the whole corridor.</div>';
 }
 
 /* state */
 function refresh() {
-  if (pinned !== shown) {                     // redraw the detail panel only when the pin changes
-    if (pinned) renderDetail(pinned); else renderPlaceholder();
-    shown = pinned;
+  const want = gpin ? 'g:' + gpin : pinned;
+  if (want !== shown) {                       // redraw the detail panel only when the selection changes
+    if (gpin) renderGroup(gpin); else if (pinned) renderDetail(pinned); else renderPlaceholder();
+    shown = want;
   }
+  // corridor group (West/East/Road) active? -> highlight its sections, fade the others
+  const gname = ghover || (hover ? null : gpin);
+  const mem = gname && G[gname] ? G[gname].sections : null;
   const key = hover || pinned;                // hover = soft highlight, pinned = full highlight
-  $$('.box,.scard').forEach(el => el.classList.toggle('on', el.dataset.k === key));
-  $$('.box').forEach(el => el.classList.toggle('pin', el.dataset.k === pinned));
+  $$('.box,.scard').forEach(el => {
+    const k = el.dataset.k;
+    el.classList.toggle('on', mem ? mem.includes(k) : k === key);
+    el.classList.toggle('dim', !!mem && !mem.includes(k));
+  });
+  $$('.box').forEach(el => el.classList.toggle('pin', !mem && el.dataset.k === pinned));
+  $$('.gcard').forEach(el => el.classList.toggle('on', el.dataset.g === gpin));
   fit();
 }
 
