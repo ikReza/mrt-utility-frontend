@@ -242,6 +242,37 @@ def apply_custom_css():
             color: var(--primary) !important;
         }}
         div[data-baseweb="select"] svg {{ fill: var(--ink-muted) !important; opacity: 1 !important; }}
+
+        /* dropdown menu (rendered in a body-level portal, outside the sidebar):
+           dark panel + readable option text at every nesting level */
+        div[data-baseweb="popover"],
+        div[data-baseweb="popover"] > div,
+        div[data-baseweb="popover"] [data-baseweb="menu"],
+        div[data-baseweb="popover"] ul,
+        div[data-baseweb="popover"] ul[role="listbox"] {{
+            background: #0d1428 !important;
+        }}
+        div[data-baseweb="popover"] li,
+        div[data-baseweb="popover"] li[role="option"] {{
+            background: transparent !important;
+            color: #e9f6ff !important;
+        }}
+        div[data-baseweb="popover"] li *,
+        div[data-baseweb="popover"] [role="option"] * {{
+            background: transparent !important;
+            color: #e9f6ff !important;
+            opacity: 1 !important;
+        }}
+        div[data-baseweb="popover"] li:hover,
+        div[data-baseweb="popover"] li[aria-selected="true"],
+        div[data-baseweb="popover"] li[data-highlighted="true"] {{
+            background: rgba(0,240,255,.14) !important;
+        }}
+        div[data-baseweb="popover"] li:hover *,
+        div[data-baseweb="popover"] li[aria-selected="true"] *,
+        div[data-baseweb="popover"] li[data-highlighted="true"] * {{
+            color: #00f0ff !important;
+        }}
         div[data-baseweb="select"], div[data-baseweb="select"] * {{ cursor: pointer !important; }}
 
         /* ---------- expander ---------- */
