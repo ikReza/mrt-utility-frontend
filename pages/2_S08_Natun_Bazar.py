@@ -2,7 +2,8 @@
 
 Place: pages/1_Natun_Bazar_S08.py (run the app with: streamlit run Dashboard.py)
 Data: mock data below until data/natun_bazar_status.xlsx exists (project root / data).
-      Excel sheets: Progress, Sections, Issues, Contractors (same columns as the mock tables).
+      Excel sheets: Progress, Sections, Issues, Contractors (same columns as the mock tables)
+      and Dependencies (rules for the Dependencies tab; see dependency_table below).
       Nobody can edit anything in the browser; you update the Excel file, the page refreshes.
 """
 import html
@@ -79,6 +80,26 @@ MOCK_CONTRACTORS = pd.DataFrame([
 ], columns=["package", "contractor", "status", "note"])
 # All packages are appointed through 24 ECB, the delegated agency.
 
+# Dependency rules (same rows as the Dependencies sheet in the Excel file).
+# node = what waits (a section id or section:group), depends_on = comma-separated prerequisites,
+# EXT:<label> = an outside party. Rendered by dependency_table().
+MOCK_DEPS = pd.DataFrame([
+    ("S1:Telecom and cables", "EXT:US Embassy telecom relocation + handover", "external", "I-01: firm handover date needed in writing"),
+    ("S2:TITAS gas", "EXT:TITAS resolution date", "external", "I-03: TITAS issue holding Section-2"),
+    ("S3:TITAS gas", "EXT:TITAS connection detail sign-off", "technical", "I-04: freeze connection method and manhole locations, CH 600-730"),
+    ("S4:Excavation", "EXT:Sheet pile supply (Anisha Corporation)", "external", "I-02 / I-06: no excavation until sheet piles arrive"),
+    ("S5:Excavation", "EXT:Sheet pile supply (Anisha Corporation)", "external", "I-02: supplier changed; no delivery for 3+ weeks"),
+    ("S5:Drainage", "EXT:Drainage bypass redo CH 0-90 agreement", "technical", "I-05: bypass laid on proposed alignment; redo method and date to be agreed"),
+    ("S6", "S4, S5", "sequence", "I-08 / I-09: CH 450-470 and side connections were deferred to the mid crossing"),
+    ("S1:Road restoration", "S1:Excavation, S1:Drainage, S1:TITAS gas, S1:DWASA water, S1:Telecom and cables, S1:DESCO power", "sequence", "road reinstatement waits for every buried utility of the section"),
+    ("S2:Road restoration", "S2:Excavation, S2:Drainage, S2:TITAS gas, S2:DWASA water, S2:DESCO power", "sequence", "road reinstatement waits for every buried utility of the section"),
+    ("S3:Road restoration", "S3:Excavation, S3:Drainage, S3:TITAS gas, S3:DWASA water, S3:Telecom and cables, S3:DESCO power", "sequence", "road reinstatement waits for every buried utility of the section"),
+    ("S4:Road restoration", "S4:Excavation, S4:Drainage, S4:TITAS gas, S4:DWASA water, S4:Telecom and cables", "sequence", "road reinstatement waits for every buried utility of the section"),
+    ("S5:Road restoration", "S5:Excavation, S5:Drainage, S5:TITAS gas, S5:DWASA water, S5:Telecom and cables, S5:DESCO power", "sequence", "road reinstatement waits for every buried utility of the section"),
+    ("S6:Road restoration", "S6:Excavation, S6:TITAS gas, S6:DWASA water, S6:Telecom and cables, S6:DESCO power", "sequence", "road reinstatement waits for every buried utility of the section"),
+    ("S7:Road restoration", "S7:Excavation, S7:DESCO power", "sequence", "road reinstatement waits for every buried utility of the section"),
+], columns=["node", "depends_on", "type", "note"])
+
 
 def _stamp():
     return XLSX.stat().st_mtime if XLSX.exists() else 0
@@ -89,10 +110,15 @@ def load(stamp):
     """Reads the Excel file if present (re-read whenever the file is saved), else mock data."""
     mock = not XLSX.exists()
     if mock:
-        prog, sec, iss, con = MOCK_PROGRESS, MOCK_SECTIONS, MOCK_ISSUES, MOCK_CONTRACTORS
+        prog, sec, iss, con, dep = MOCK_PROGRESS, MOCK_SECTIONS, MOCK_ISSUES, MOCK_CONTRACTORS, MOCK_DEPS
     else:
         x = pd.read_excel(XLSX, sheet_name=None)
         prog, sec, iss, con = x["Progress"], x["Sections"], x["Issues"], x["Contractors"]
+        dep = x.get("Dependencies")
+        if dep is None or not {"node", "depends_on"} <= set(dep.columns):
+            dep = pd.DataFrame(columns=["node", "depends_on", "type", "note"])
+        else:
+            dep = dep[["node", "depends_on", "type", "note"]].dropna(subset=["node", "depends_on"]).fillna("")
     prog = prog[["section", "item", "factor", "qty", "actual"]].dropna(subset=["section", "item"]).copy()
     prog["section"] = prog["section"].astype(str).str.strip()
     sec, iss, con = sec.copy(), iss.copy(), con.copy()
@@ -102,15 +128,15 @@ def load(stamp):
         iss[c] = pd.to_datetime(iss[c], errors="coerce").dt.date
     iss = iss.dropna(subset=["id"]).fillna({"priority": "Medium", "owner": "", "reported_via": "", "next_action": ""})
     iss["status"] = iss["status"].astype(str).str.strip().str.capitalize()
-    return prog, sec, iss, con.fillna(""), mock
+    return prog, sec, iss, con.fillna(""), dep, mock
 
 
 # ----------------------------------------------------------------------------
 # Theme and helpers
 # ----------------------------------------------------------------------------
-TXT, MUT = "#E8EEFF", "#8A97B8"
-CY, MINT, AMB, PINK, VIO, GREY = "#25E8FF", "#2BFFB0", "#FFB224", "#FF3D71", "#9B6BFF", "#6A7794"
-RGB = {CY: "37,232,255", MINT: "43,255,176", AMB: "255,178,36", PINK: "255,61,113", VIO: "155,107,255", GREY: "106,119,148"}
+TXT, MUT = "#e9f6ff", "#7b86b8"
+CY, MINT, AMB, PINK, VIO, GREY = "#00f0ff", "#2bff88", "#ffcc33", "#ff2e5f", "#8f7bff", "#7b86b8"
+RGB = {c: ",".join(str(int(c[i:i + 2], 16)) for i in (1, 3, 5)) for c in (CY, MINT, AMB, PINK, VIO, GREY)}
 COL = {"Complete": MINT, "In progress": CY, "On hold": AMB, "Blocked": PINK, "Not started": GREY}
 STALLED = ("On hold", "Blocked")
 PRIORITY = {"High": 0, "Medium": 1, "Low": 2}
@@ -156,26 +182,24 @@ def plan_svg(sections, sec_pct, open_n):
     o = ["""<svg viewBox="0 0 1000 385" width="100%" role="img" aria-label="Station corridor plan, south to north">
 <defs>
 <filter id="glow" x="-20%" y="-60%" width="140%" height="220%"><feGaussianBlur stdDeviation="3.2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-<pattern id="hOnhold" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="3.5" height="9" fill="rgba(255,178,36,.22)"/></pattern>
-<pattern id="hBlocked" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="3.5" height="9" fill="rgba(255,61,113,.26)"/></pattern>
+<pattern id="hOnhold" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="3.5" height="9" fill="rgba(255,204,51,.22)"/></pattern>
+<pattern id="hBlocked" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="3.5" height="9" fill="rgba(255,46,95,.26)"/></pattern>
 </defs>
 <text x="60" y="14" class="mut">South</text><text x="940" y="14" class="mut" text-anchor="end">North</text>
 <text x="60" y="40" class="cor">West corridor</text>
-<text x="940" y="40" class="mut" text-anchor="end">Chainage 0 at the south end, rising north</text>
-<text x="60" y="372" class="cor">East corridor</text>
-<text x="940" y="372" class="mut" text-anchor="end">Chainage 0 at the north end, rising south</text>"""]
+<text x="60" y="372" class="cor">East corridor</text>"""]
     Y = {"W": (92, 62, 66, 82), "E": (236, 62, 331, 316)}  # band y, height, chainage-text y, status-text y
 
     def pin(x, y, sid):
         n = open_n.get(sid, 0)
         if n:
-            o.append(f'<g><title>{n} open issue(s)</title><circle cx="{x}" cy="{y}" r="10" fill="#060913" stroke="{TXT}" stroke-width="1.5"/>'
+            o.append(f'<g><title>{n} open issue(s)</title><circle cx="{x}" cy="{y}" r="10" fill="#04060d" stroke="{TXT}" stroke-width="1.5"/>'
                      f'<text x="{x}" y="{y + 4}" text-anchor="middle" class="pin">{n}</text></g>')
 
     for sid, ch in CROSS.items():  # crossings first so band ends sit on top of them
         x, status, p = X(ch), st_of[sid], sec_pct[sid]
         col, h = COL[status], 82
-        o.append(f'<rect x="{x - 11}" y="154" width="22" height="{h}" fill="#111B30"/>')
+        o.append(f'<rect x="{x - 11}" y="154" width="22" height="{h}" fill="#0d1428"/>')
         if status in STALLED: o.append(f'<rect x="{x - 11}" y="154" width="22" height="{h}" fill="url(#h{status.replace(" ", "")})"/>')
         o.append(f'<rect x="{x - 11}" y="{154 + h - h * p / 100}" width="22" height="{h * p / 100}" fill="{col}" filter="url(#glow)"/>'
                  f'<rect x="{x - 11}" y="154" width="22" height="{h}" fill="none" stroke="{col}" stroke-width="1.6"/>')
@@ -193,11 +217,11 @@ def plan_svg(sections, sec_pct, open_n):
         x0, x1 = lo + 1.5, hi - 1.5
         w, p, status = x1 - x0, sec_pct[sid], st_of[sid]
         col = COL[status]
-        o.append(f'<rect x="{x0}" y="{y}" width="{w}" height="{h}" rx="7" fill="#111B30"/>')
+        o.append(f'<rect x="{x0}" y="{y}" width="{w}" height="{h}" rx="7" fill="#0d1428"/>')
         if status in STALLED: o.append(f'<rect x="{x0}" y="{y}" width="{w}" height="{h}" rx="7" fill="url(#h{status.replace(" ", "")})"/>')
         o.append(f'<rect x="{x0}" y="{y}" width="{w * p / 100}" height="{h}" rx="7" fill="{col}" opacity=".9" filter="url(#glow)"/>'
                  f'<rect x="{x0}" y="{y}" width="{w}" height="{h}" rx="7" fill="none" stroke="{col}" stroke-width="1.6"/>'
-                 f'<rect x="{x0 + 7}" y="{y + 8}" width="62" height="{h - 16}" rx="5" fill="#060913" opacity=".86"/>'
+                 f'<rect x="{x0 + 7}" y="{y + 8}" width="62" height="{h - 16}" rx="5" fill="#04060d" opacity=".86"/>'
                  f'<text x="{x0 + 14}" y="{y + 25}" class="lab">{sid}</text>'
                  f'<text x="{x0 + 14}" y="{y + h - 14}" class="big" fill="{col}">{p:.0f}%</text>'
                  f'<text x="{x0 + 2}" y="{cy}" class="mut">{e(str(info.loc[sid, "chainage"]))}</text>'
@@ -216,9 +240,11 @@ def cell(p, cls="c", c=None):
         return "<td class='na'>-</td>"
     c = c or tone(p)
     rgb = RGB[c]
-    fill = f"linear-gradient(90deg,rgba({rgb},.45) {p}%,rgba({rgb},{.16 if p == 0 else .08}) {p}%)"
+    tot = "tot" in cls or "ft" in cls
+    fill = f"rgba({rgb},{.24 if tot else .16})"  # uniform filled cell; totals get a heavier wash + ring
+    ring = f"inset 0 0 0 1.5px rgba({rgb},.65)" if tot else f"inset 0 0 0 1px rgba({rgb},.5)"
     glow = ",0 0 14px rgba(%s,.30)" % rgb if "tot" in cls else ",0 0 9px rgba(%s,.18)" % rgb if "ft" in cls else ""
-    return f"<td class='{cls}' style='background:{fill};color:{c};box-shadow:inset 0 0 0 1px rgba({rgb},.5){glow}'>{p:.0f}%</td>"
+    return f"<td class='{cls}' style='background:{fill};color:{c};box-shadow:{ring}{glow}'>{p:.0f}%</td>"
 
 
 def matrix(df, sections, sec_pct, status):
@@ -230,14 +256,14 @@ def matrix(df, sections, sec_pct, status):
             x = d[d.group == g]
             tds.append(cell(None if x.empty else pct(x.f_actual.sum(), x.f_qty.sum())))
         dot = f"<i class='dot' style='background:{COL.get(status[s.section], GREY)}'></i>"
-        rows.append(f"<tr><td class='rh'>{dot}{e(s.name)}<small>{e(str(s.corridor).lower())}</small></td>{''.join(tds)}{cell(sec_pct[s.section], 'c tot')}</tr>")
+        rows.append(f"<tr><td class='rh'>{dot}{e(s.name)}<small>{e(str(s.corridor).lower())}</small></td>{''.join(tds)}{cell(sec_pct[s.section], 'c tot', VIO)}</tr>")
     foot = []
     for g in GROUPS:
         x = df[df.group == g]
-        foot.append(cell(None if x.empty else pct(x.f_actual.sum(), x.f_qty.sum()), "c ft"))
+        foot.append(cell(None if x.empty else pct(x.f_actual.sum(), x.f_qty.sum()), "c ft", VIO))
     overall = pct(df.f_actual.sum(), df.f_qty.sum())
     corner = cell(overall, "c tot ft", VIO).replace(f"{overall:.0f}%</td>", f"{overall:.1f}%</td>")
-    foot_row = f"<tr class='sep'><td class='rh'><i class='dot' style='background:{VIO}'></i>All sections<small>weighted</small></td>{''.join(foot)}{corner}</tr>"
+    foot_row = f"<tr class='sep'><td class='rh rhx'><i class='dot' style='background:{VIO}'></i>All sections<small>weighted</small></td>{''.join(foot)}{corner}</tr>"
     return (f"<div class='panel' style='overflow-x:auto'><table class='mx'><tr><th></th>{head}<th class='tt'>Section total</th></tr>"
             f"{''.join(rows)}{foot_row}</table></div>")
 
@@ -269,102 +295,119 @@ def issue_html(r, today):
 
 
 CSS = """
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap');
-:root{--bg:#060913;--surf:#0C1322;--surf2:#111B30;--line:rgba(130,170,255,.16);--txt:#E8EEFF;--mut:#8A97B8;--cy:#25E8FF;--vio:#9B6BFF;--pink:#FF3D71}
-html,body,.stApp,[class*="css"]{font-family:'DM Sans',system-ui,sans-serif;color:var(--txt)}
-.stApp{background:radial-gradient(1100px 500px at 85% -10%,rgba(155,107,255,.16),transparent 60%),radial-gradient(900px 500px at 0% 0%,rgba(37,232,255,.10),transparent 55%),var(--bg)}
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Orbitron:wght@500;600;700;800&display=swap');
+:root{--bg:#04060d;--surf:#0a1020;--surf2:#0d1428;--line:rgba(0,240,255,.16);--txt:#e9f6ff;--mut:#7b86b8;--cy:#00f0ff;--vio:#8f7bff;--pink:#ff2e5f}
+html,body,.stApp,[class*="css"]{font-family:'JetBrains Mono',system-ui,sans-serif;color:var(--txt)}
+.stApp{background:radial-gradient(1100px 500px at 85% -10%,rgba(143,123,255,.16),transparent 60%),radial-gradient(900px 500px at 0% 0%,rgba(0,240,255,.10),transparent 55%),var(--bg)}
 #MainMenu,footer{visibility:hidden}
 header[data-testid="stHeader"]{background:transparent}
 .block-container{max-width:1260px;padding:1.2rem 1.4rem 3rem}
-h1,h2,h3,.tv,.big,.brand b,.pv{font-family:'Space Grotesk',sans-serif}
+h1,h2,h3,.brand b{font-family:'Orbitron',sans-serif}
 .topbar{display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;padding:.2rem 0 .9rem}
 .brand{display:flex;align-items:center;gap:.8rem}
-.logo{width:38px;height:38px;border-radius:11px;background:conic-gradient(from 210deg,#25E8FF,#9B6BFF,#FF3D71,#25E8FF);box-shadow:0 0 22px rgba(37,232,255,.45);position:relative}
-.logo::after{content:'';position:absolute;inset:3px;border-radius:8px;background:#060913}
-.logo::before{content:'';position:absolute;left:9px;right:9px;top:17px;height:4px;border-radius:2px;background:#25E8FF;box-shadow:0 0 8px #25E8FF;z-index:2}
+.logo{width:38px;height:38px;border-radius:11px;background:conic-gradient(from 210deg,#00f0ff,#8f7bff,#ff2e5f,#00f0ff);box-shadow:0 0 22px rgba(0,240,255,.45);position:relative}
+.logo::after{content:'';position:absolute;inset:3px;border-radius:8px;background:#04060d}
+.logo::before{content:'';position:absolute;left:9px;right:9px;top:17px;height:4px;border-radius:2px;background:#00f0ff;box-shadow:0 0 8px #00f0ff;z-index:2}
 .brand b{font-size:1.35rem;letter-spacing:-.01em;display:block;line-height:1.1}
 .brand small{color:var(--mut);font-size:.82rem}
-.tag{font-size:.78rem;font-weight:600;padding:5px 11px;border-radius:999px;border:1px solid rgba(255,178,36,.5);color:#FFB224;background:rgba(255,178,36,.08)}
-div[data-testid="stRadio"]>div[role="radiogroup"]{gap:.3rem;background:rgba(12,19,34,.8);border:1px solid var(--line);border-radius:14px;padding:5px;display:inline-flex;flex-wrap:wrap}
+.tag{font-size:.78rem;font-weight:600;padding:5px 11px;border-radius:999px;border:1px solid rgba(255,204,51,.5);color:#ffcc33;background:rgba(255,204,51,.08)}
+div[data-testid="stRadio"]>div[role="radiogroup"]{gap:.3rem;background:rgba(10,16,32,.8);border:1px solid var(--line);border-radius:14px;padding:5px;display:inline-flex;flex-wrap:wrap}
 div[data-testid="stRadio"] label{padding:.5rem 1.2rem;border-radius:10px;cursor:pointer;margin:0;transition:background .15s}
 div[data-testid="stRadio"] label>div:first-child{display:none}
 div[data-testid="stRadio"] label p{font-weight:600;color:var(--mut);font-size:.95rem;margin:0}
 div[data-testid="stRadio"] label:hover p{color:var(--txt)}
-div[data-testid="stRadio"] label:has(input:checked){background:linear-gradient(135deg,rgba(37,232,255,.22),rgba(155,107,255,.24));box-shadow:0 0 0 1px rgba(37,232,255,.55),0 0 18px rgba(37,232,255,.25)}
+div[data-testid="stRadio"] label:has(input:checked){background:linear-gradient(135deg,rgba(0,240,255,.22),rgba(143,123,255,.24));box-shadow:0 0 0 1px rgba(0,240,255,.55),0 0 18px rgba(0,240,255,.25)}
 div[data-testid="stRadio"] label:has(input:checked) p{color:#fff}
 .hero{display:grid;grid-template-columns:auto 1fr;gap:1rem;margin:1.1rem 0 .4rem}
 .panel,.ringcard,.tile{background:linear-gradient(180deg,var(--surf2),var(--surf));border:1px solid var(--line);border-radius:16px}
 .panel{padding:.7rem .8rem}
 .ringcard{display:flex;align-items:center;gap:1.2rem;padding:1rem 1.4rem}
-.ring{width:132px;height:132px;border-radius:50%;display:grid;place-items:center;box-shadow:0 0 34px rgba(37,232,255,.28)}
-.ring i{width:104px;height:104px;border-radius:50%;background:#0A1120;display:grid;place-items:center;font-style:normal;font-family:'Space Grotesk';font-weight:700;font-size:1.75rem}
+.ring{width:132px;height:132px;border-radius:50%;display:grid;place-items:center;box-shadow:0 0 34px rgba(0,240,255,.28)}
+.ring i{width:104px;height:104px;border-radius:50%;background:#0a1020;display:grid;place-items:center;font-style:normal;font-family:'JetBrains Mono',monospace;font-weight:700;font-size:1.75rem}
 .ringcard .tl{font-weight:600;font-size:1.05rem}.ringcard .ts{color:var(--mut);font-size:.84rem;max-width:170px}
-.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:.8rem}
+.tiles{display:grid;grid-template-columns:repeat(2,1fr);gap:.8rem}
 .tile{padding:1rem 1.1rem;position:relative;overflow:hidden}
 .tile .acc{position:absolute;left:0;top:14%;bottom:14%;width:3px;border-radius:3px}
 .tl{color:var(--mut);font-size:.84rem;font-weight:500}.tv{font-size:2.3rem;font-weight:700;line-height:1.15;text-shadow:0 0 18px currentColor}.ts{color:var(--mut);font-size:.8rem}
-h3.sec{font-family:'Space Grotesk';font-size:1.1rem;font-weight:600;margin:1.7rem 0 .7rem;display:flex;align-items:center;gap:.6rem}
-h3.sec::before{content:'';width:22px;height:3px;border-radius:2px;background:linear-gradient(90deg,#25E8FF,#9B6BFF);box-shadow:0 0 10px #25E8FF}
+h3.sec{font-family:'Orbitron';font-size:1.1rem;font-weight:600;margin:1.7rem 0 .7rem;display:flex;align-items:center;gap:.6rem}
+h3.sec::before{content:'';width:22px;height:3px;border-radius:2px;background:linear-gradient(90deg,#00f0ff,#8f7bff);box-shadow:0 0 10px #00f0ff}
 .mx{width:100%;border-collapse:separate;border-spacing:4px;font-size:.88rem}
-.mx th{font-weight:600;color:var(--mut);text-align:center;padding:6px 6px;font-size:.78rem}.mx th.tt{color:#C8B8FF}
-.mx td.c{padding:11px 6px;border-radius:8px;text-align:center;font-weight:600;font-family:'Space Grotesk'}
-.mx td.tot{font-size:1rem}
-.mx td.na{text-align:center;color:#3A4663}
+.mx th{font-weight:600;color:var(--mut);text-align:center;padding:6px 6px;font-size:.78rem}.mx th.tt{color:#C8B8FF;background:rgba(143,123,255,.18);border-radius:8px}
+.mx td.c{padding:11px 6px;border-radius:8px;text-align:center;font-weight:600;font-family:'JetBrains Mono'}
+.mx td.tot{font-size:1.02rem;font-weight:700}
+.mx td.na{text-align:center;color:#57608f}
 .mx td.rh{text-align:left;font-weight:600;white-space:nowrap;padding:0 10px 0 4px}.mx td.rh small{color:var(--mut);font-weight:400;margin-left:8px}
+.mx td.rhx{background:rgba(143,123,255,.16);border-radius:8px;box-shadow:inset 0 0 0 1px rgba(143,123,255,.42)}
 .mx tr.sep td{padding-top:12px}.mx tr.sep td.rh{padding-top:12px}
 .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:9px;box-shadow:0 0 8px currentColor}
 .isu{display:grid;grid-template-columns:4px 1fr 160px 80px 100px;gap:1rem;align-items:center;background:var(--surf);
  border:1px solid var(--line);border-radius:12px;padding:.75rem 1rem .75rem 0;margin-bottom:.5rem;overflow:hidden;font-size:.88rem}
 .isu .bar{align-self:stretch}
-.isu .t{font-weight:600}.isu .m{color:var(--mut);font-size:.8rem;font-weight:400}.isu .n{text-align:right;font-weight:600;font-family:'Space Grotesk'}
-.od{color:#FF3D71}
+.isu .t{font-weight:600}.isu .m{color:var(--mut);font-size:.8rem;font-weight:400}.isu .n{text-align:right;font-weight:600;font-family:'JetBrains Mono'}
+.od{color:#ff2e5f}
 div[data-testid="stWidgetLabel"] p{color:var(--mut);font-weight:600}
-div[data-baseweb="select"]>div{background:#0C1322;border:1px solid rgba(37,232,255,.5);border-radius:12px;box-shadow:0 0 12px rgba(37,232,255,.25);transition:box-shadow .15s,border-color .15s}
-div[data-baseweb="select"]>div:hover,div[data-baseweb="select"]>div:focus-within{border-color:#25E8FF;box-shadow:0 0 0 1px #25E8FF,0 0 24px rgba(37,232,255,.6)}
-span[data-baseweb="tag"]{background:linear-gradient(135deg,rgba(155,107,255,.30),rgba(37,232,255,.16))!important;border:1px solid rgba(155,107,255,.75);border-radius:8px;box-shadow:0 0 10px rgba(155,107,255,.4)}
-span[data-baseweb="tag"] span,span[data-baseweb="tag"] svg{color:#E8EEFF!important;fill:#E8EEFF!important}
-div[data-baseweb="popover"]>div,div[data-baseweb="popover"] ul[role="listbox"]{background:#0C1322!important;border-radius:12px}
-div[data-baseweb="popover"] ul[role="listbox"]{border:1px solid rgba(37,232,255,.45);box-shadow:0 0 24px rgba(37,232,255,.22)}
-li[role="option"]{background:transparent!important;color:#E8EEFF!important}
-li[role="option"]:hover,li[role="option"][aria-selected="true"]{background:rgba(37,232,255,.15)!important}
+div[data-baseweb="select"]>div{background:#0a1020;border:1px solid rgba(0,240,255,.5);border-radius:12px;box-shadow:0 0 12px rgba(0,240,255,.25);transition:box-shadow .15s,border-color .15s}
+div[data-baseweb="select"]>div:hover,div[data-baseweb="select"]>div:focus-within{border-color:#00f0ff;box-shadow:0 0 0 1px #00f0ff,0 0 24px rgba(0,240,255,.6)}
+span[data-baseweb="tag"]{background:linear-gradient(135deg,rgba(143,123,255,.30),rgba(0,240,255,.16))!important;border:1px solid rgba(143,123,255,.75);border-radius:8px;box-shadow:0 0 10px rgba(143,123,255,.4)}
+span[data-baseweb="tag"] span,span[data-baseweb="tag"] svg{color:#e9f6ff!important;fill:#e9f6ff!important}
+div[data-baseweb="popover"]>div,div[data-baseweb="popover"] ul[role="listbox"]{background:#0a1020!important;border-radius:12px}
+div[data-baseweb="popover"] ul[role="listbox"]{border:1px solid rgba(0,240,255,.45);box-shadow:0 0 24px rgba(0,240,255,.22)}
+li[role="option"]{background:transparent!important;color:#e9f6ff!important}
+li[role="option"]:hover,li[role="option"][aria-selected="true"]{background:rgba(0,240,255,.15)!important}
 .crow{display:grid;grid-template-columns:190px 1fr 110px;gap:1rem;align-items:center;background:linear-gradient(180deg,var(--surf2),var(--surf));border:1px solid var(--line);border-radius:14px;padding:.85rem 1.1rem;margin-bottom:.6rem}
-.crow .pk{font-family:'Space Grotesk';font-weight:600}.crow .st{text-align:right}
+.crow .pk{font-family:'Orbitron';font-weight:600}.crow .st{text-align:right}
 .cn2{display:inline-block;padding:.5rem .9rem;border-radius:12px;border:1px solid var(--line);background:var(--bg)}
-.cn2 b{display:block;font-family:'Space Grotesk';font-size:1rem}.cn2 small{color:var(--mut);font-size:.78rem}
+.cn2 b{display:block;font-family:'Orbitron';font-size:1.05rem}.cn2 small{color:#b9c6ef;font-size:.84rem}
 .cn2.dim b{color:var(--mut);font-weight:500}
-.cn2.old{opacity:.6;border-style:dashed}.cn2.old b{text-decoration:line-through;text-decoration-color:rgba(255,61,113,.8)}
-.cn2.new{border-color:rgba(43,255,176,.6);box-shadow:0 0 16px rgba(43,255,176,.28)}
+.cn2.old{opacity:.72;border-style:dashed}.cn2.old b{text-decoration:line-through;text-decoration-color:rgba(255,46,95,.8)}
+.cn2.new{border-color:rgba(43,255,136,.6);box-shadow:0 0 16px rgba(43,255,136,.28)}
 .swap{display:flex;align-items:center;gap:1rem;flex-wrap:wrap}
-.parr{display:inline-flex;align-items:center;gap:6px;color:#25E8FF}
-.parr b{width:7px;height:7px;border-radius:50%;background:currentColor;box-shadow:0 0 8px currentColor;animation:hop 1.1s infinite ease-in-out}
-.parr b:nth-child(2){animation-delay:.15s}.parr b:nth-child(3){animation-delay:.3s}
-.parr i{font-style:normal;font-size:1.7rem;line-height:1;text-shadow:0 0 12px currentColor;animation:nudge 1.1s infinite ease-in-out;animation-delay:.45s}
-@keyframes hop{0%,100%{transform:translateY(0);opacity:.45}40%{transform:translateY(-8px);opacity:1}}
-@keyframes nudge{0%,100%{transform:translateX(0) rotate(0)}50%{transform:translateX(7px) rotate(-10deg)}}
-@media (prefers-reduced-motion:reduce){.parr b,.parr i{animation:none}}
-.chip{font-size:.74rem;font-weight:600;padding:3px 9px;border-radius:999px;background:rgba(155,107,255,.15);color:#C8B8FF;border:1px solid rgba(155,107,255,.35)}
+.parr{display:inline-flex;align-items:center;gap:6px;color:#00f0ff}
+.parr b{width:7px;height:7px;border-radius:50%;background:currentColor;box-shadow:0 0 8px currentColor;opacity:.5}
+.parr b:nth-child(2){opacity:.75}.parr b:nth-child(3){opacity:1}
+.parr i{font-style:normal;font-size:1.7rem;line-height:1;text-shadow:0 0 12px currentColor}
+.chip{font-size:.74rem;font-weight:600;padding:3px 9px;border-radius:999px;background:rgba(143,123,255,.15);color:#C8B8FF;border:1px solid rgba(143,123,255,.35)}
 .ibar{display:grid;grid-template-columns:190px 1fr 48px;gap:.8rem;align-items:center;font-size:.86rem;margin:7px 0}
 .ibar .tr{height:8px;background:#16213B;border-radius:4px;overflow:hidden}.ibar .tr i{display:block;height:100%;border-radius:4px}.pv{text-align:right;font-weight:600}
 .cgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:.8rem}
 .cc{background:linear-gradient(180deg,var(--surf2),var(--surf));border:1px solid var(--line);border-radius:14px;padding:1rem 1.1rem;border-top:2px solid var(--c)}
-.cc .ch{color:var(--mut);font-size:.8rem}.cc .cn{font-family:'Space Grotesk';font-size:1.1rem;font-weight:600;margin:.25rem 0}.cc .cm{color:var(--mut);font-size:.82rem;margin-bottom:.6rem}
+.cc .ch{color:var(--mut);font-size:.8rem}.cc .cn{font-family:'Orbitron';font-size:1.1rem;font-weight:600;margin:.25rem 0}.cc .cm{color:var(--mut);font-size:.82rem;margin-bottom:.6rem}
 .flow{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;margin:.2rem 0 1rem}
 .flow span.n{padding:.45rem .9rem;border-radius:999px;border:1px solid var(--line);background:var(--surf2);font-weight:600;font-size:.86rem}
-.flow span.a{color:#25E8FF;text-shadow:0 0 10px #25E8FF}
+.flow span.a{color:#00f0ff;text-shadow:0 0 10px #00f0ff}
 div[data-testid="stExpander"]{border:1px solid var(--line);border-radius:12px;background:var(--surf)}
+.p6{min-width:1080px;font-size:.86rem}
+.p6 .hd{display:grid;grid-template-columns:175px 1.05fr 112px 150px 1fr 1fr;gap:.6rem;align-items:center;color:var(--mut);font-weight:600;font-size:.74rem;text-transform:uppercase;letter-spacing:.05em;padding:.45rem .85rem;border-bottom:1px solid var(--line)}
+.p6b{display:flex;align-items:center;gap:.7rem;flex-wrap:wrap;background:linear-gradient(180deg,var(--surf2),var(--surf));border:1px solid var(--line);border-left:3px solid var(--c,#57608f);border-radius:10px;padding:.5rem .85rem;margin:.75rem 0 .3rem;font-family:'Orbitron';font-weight:600}
+.p6b .ch2{color:var(--mut);font-size:.78rem;font-family:'JetBrains Mono',monospace;font-weight:400}
+.p6r{display:grid;grid-template-columns:175px 1.05fr 112px 150px 1fr 1fr;gap:.6rem;align-items:center;background:var(--surf);border:1px solid rgba(0,240,255,.10);border-radius:8px;padding:.45rem .85rem;margin:.22rem 0}
+.p6r .id{color:var(--mut);font-family:'JetBrains Mono',monospace;font-size:.76rem;white-space:nowrap}
+.p6r .nm{font-weight:600}
+.p6 .st{font-size:.72rem;font-weight:600;padding:2px 9px;border-radius:999px}
+.p6r .st{justify-self:start}
+.p6 .p2{font-weight:700}
+.pbar{height:6px;background:#16213B;border-radius:3px;overflow:hidden;margin-top:4px}
+.pbar i{display:block;height:100%;border-radius:3px}
+.dl{color:var(--mut);font-size:.72rem}
+.rel{display:inline-block;margin:1px 6px 1px 0;font-size:.76rem;font-family:'JetBrains Mono',monospace}
+.rel.ok{color:#2bff88}
+.rel.no{color:#ff2e5f}
+.rel.ext{color:#ffcc33}
+.lg2{display:flex;gap:12px;flex-wrap:wrap;font-size:.76rem;color:var(--mut);margin-top:1rem;align-items:center}
+.lg2 b{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:6px;vertical-align:-1px}
 @media (max-width:900px){.crow{grid-template-columns:1fr}.crow .st{text-align:left}.hero{grid-template-columns:1fr}.tiles{grid-template-columns:repeat(2,1fr)}.isu{grid-template-columns:4px 1fr}.isu .x{display:none}}
 """
 
-PLAN_CSS = """@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600&family=Space+Grotesk:wght@600;700&display=swap');
-body{margin:0;font-family:'DM Sans',sans-serif;background:transparent}
-.w{background:linear-gradient(180deg,#111B30,#0C1322);border:1px solid rgba(130,170,255,.16);border-radius:16px;padding:10px 14px 12px}
-.mut{font-size:12px;fill:#8A97B8}.cor{font-size:14px;font-weight:700;fill:#E8EEFF;font-family:'Space Grotesk'}.lab{font-size:12px;font-weight:600;fill:#E8EEFF}
-.big{font-size:20px;font-weight:700;font-family:'Space Grotesk'}.cap{font-size:12px;font-weight:600}.pin{font-size:11px;font-weight:700;fill:#fff}
-.lg{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:#8A97B8;padding:6px 4px 0}.lg b{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:6px;vertical-align:-1px}"""
+PLAN_CSS = """@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Orbitron:wght@600;700&display=swap');
+body{margin:0;font-family:'JetBrains Mono',sans-serif;background:transparent}
+.w{background:linear-gradient(180deg,#0d1428,#0a1020);border:1px solid rgba(0,240,255,.16);border-radius:16px;padding:10px 14px 12px}
+.mut{font-size:12px;fill:#7b86b8}.cor{font-size:14px;font-weight:700;fill:#e9f6ff;font-family:'Orbitron'}.lab{font-size:12px;font-weight:600;fill:#e9f6ff}
+.big{font-size:20px;font-weight:700;font-family:'JetBrains Mono',monospace}.cap{font-size:12px;font-weight:600}.pin{font-size:11px;font-weight:700;fill:#fff}
+.lg{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:#7b86b8;padding:6px 4px 0}.lg b{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:6px;vertical-align:-1px}"""
 
 
 def ring(p):
-    return f"<div class='ring' style='background:conic-gradient(#25E8FF 0,#9B6BFF {p}%,#16213B {p}% 100%)'><i>{p:.1f}%</i></div>"
+    return f"<div class='ring' style='background:conic-gradient(#00f0ff 0,#8f7bff {p}%,#16213B {p}% 100%)'><i>{p:.1f}%</i></div>"
 
 
 def contractor_rows(con):
@@ -388,10 +431,98 @@ def contractor_rows(con):
                    f"{box(r.contractor, r.note, 'new')}</div>")
         else:
             mid = box(r.contractor, r.note, "new" if r.status == "Active" else "")
-        col = sc.get(r.status, "#3A4663")
+        col = sc.get(r.status, "#57608f")
         rows.append(f"<div class='crow' style='border-left:3px solid {col}'><div class='pk'>{e(pkg(r))}</div>{mid}"
                     f"<div class='st'><span class='chip'>{e(r.status) or 'Unassigned'}</span></div></div>")
     return "".join(rows)
+
+
+def dependency_table(df, sections, status, sec_pct, deps):
+    """Primavera-style activity table: one row per activity (section:utility) under a section
+    band, with Predecessors / Successors columns read from the Dependencies sheet
+    (node = what waits, depends_on = prerequisites, EXT:<label> = an outside party).
+    The sheet is the only source of the rules."""
+    rules, succ = {}, {}
+    for r in deps.itertuples():
+        node = str(r.node).strip()
+        rules.setdefault(node, []).append(r)
+        for t in [x.strip() for x in str(r.depends_on).split(",") if x.strip()]:
+            if not t.lower().startswith("ext:"):
+                succ.setdefault(t, []).append(node)
+
+    def grp_state(sid, g):
+        d = df[(df.section == sid) & (df.group == g)]
+        if d.empty:
+            return "Not started", 0.0
+        p = pct(d.f_actual.sum(), d.f_qty.sum())
+        return ("Complete" if p >= 99.5 else "In progress" if p > 0 else "Not started"), p
+
+    def node_state(t):
+        if ":" in t:
+            sid, g = t.split(":", 1)
+            return grp_state(sid.strip(), g.strip())
+        return status.get(t.strip(), "Not started"), sec_pct.get(t.strip(), 0.0)
+
+    def st_chip(st, c=None):
+        c = c or COL.get(st, GREY)
+        return f"<span class='st' style='color:{c};background:rgba({RGB[c]},.12);border:1px solid rgba({RGB[c]},.45)'>{e(st.lower())}</span>"
+
+    def rel_span(t, r):
+        t = t.strip()
+        tp = e(f"{r.type}: {r.note}") if (r.type or r.note) else ""
+        if t.lower().startswith("ext:"):
+            return f"<span class='rel ext' title='{tp}'>EXT · {e(t[4:].strip())}</span>"
+        st, p = node_state(t)
+        ok = st == "Complete"
+        return f"<span class='rel {'ok' if ok else 'no'}' title='{tp}'>{e(t)}{' ✓' if ok else ''} · {p:.0f}%</span>"
+
+    def pred_html(node):
+        out = "".join(rel_span(t, r) for r in rules.get(node, []) for t in str(r.depends_on).split(",") if t.strip())
+        return out or "<span class='dl'>—</span>"
+
+    def succ_html(node):
+        out = []
+        for s in succ.get(node, []):
+            st, p = node_state(s)
+            ok = st == "Complete"
+            out.append(f"<span class='rel {'ok' if ok else 'no'}' title='successor'>{e(s)}{' ✓' if ok else ''} · {p:.0f}%</span>")
+        return "".join(out) or "<span class='dl'>—</span>"
+
+    overall = pct(df.f_actual.sum(), df.f_qty.sum())
+    hd = ("<div class='hd'><span>Activity ID</span><span>Activity name</span><span>Status</span>"
+          "<span>Progress</span><span>Predecessors</span><span>Successors</span></div>")
+    o = [f"<div class='panel' style='overflow-x:auto'><div class='p6'>"
+         f"<div class='p6b' style='--c:{VIO}'><span>S08 Natun Bazar</span>"
+         f"<span class='ch2'>project — done when every activity below is complete</span>"
+         f"{st_chip('In progress', VIO)}<span class='p2' style='color:{VIO}'>{overall:.1f}%</span></div>", hd]
+    for s in sections.itertuples():
+        stv = status.get(s.section, "Not started")
+        c = COL.get(stv, GREY)
+        p = sec_pct.get(s.section, 0.0)
+        extra = ""
+        if rules.get(s.section):
+            extra += f"<span class='dl'>pred</span>{pred_html(s.section)}"
+        if succ.get(s.section):
+            extra += f"<span class='dl'>succ</span>{succ_html(s.section)}"
+        o.append(f"<div class='p6b' style='--c:{c}'><span>{e(str(s.name))}</span>"
+                 f"<span class='ch2'>{e(s.section)} · {e(str(s.corridor).lower())} · {e(str(s.chainage))}</span>{st_chip(stv)}"
+                 f"<span class='p2' style='color:{c}'>{p:.0f}%</span>{extra}</div>")
+        for g in [g for g in GROUPS if g in set(df[df.section == s.section].group.unique())]:
+            gst, gp = grp_state(s.section, g)
+            gc = COL.get(gst, GREY)
+            node = f"{s.section}:{g}"
+            o.append(f"<div class='p6r'><span class='id'>{e(node)}</span><span class='nm'>{e(g)}</span>{st_chip(gst)}"
+                     f"<span><span class='p2' style='color:{gc}'>{gp:.0f}%</span>"
+                     f"<div class='pbar'><i style='width:{gp}%;background:{gc};box-shadow:0 0 8px {gc}'></i></div></span>"
+                     f"<span>{pred_html(node)}</span><span>{succ_html(node)}</span></div>")
+    o.append("</div></div><div class='lg2'>")
+    o.append("".join(f"<span><b style='background:{c2};box-shadow:0 0 8px {c2}'></b>{n}</span>" for n, c2 in COL.items()))
+    o.append("<span class='rel ok'>✓ prerequisite met</span><span class='rel no'>prerequisite open</span>"
+             "<span class='rel ext'>EXT · outside 24 ECB control</span></div>")
+    st.markdown("".join(o), unsafe_allow_html=True)
+    st.caption("Primavera-style activity table: Predecessors / Successors come from the Dependencies sheet in "
+               "data/natun_bazar_status.xlsx — node is what waits (a section id like S4, or S4:Excavation), depends_on lists "
+               "section ids, section:utility ids, or EXT:<label> for outside parties. Add a row and save — the table updates on reload.")
 
 
 # ----------------------------------------------------------------------------
@@ -400,17 +531,15 @@ def contractor_rows(con):
 def render():
     st.set_page_config(page_title="S08 Natun Bazar", page_icon="🚧", layout="wide", initial_sidebar_state="auto")
     st.markdown(f"<style>{CSS}</style>", unsafe_allow_html=True)
-    prog, sections, issues, contractors, mock = load(_stamp())
+    prog, sections, issues, contractors, deps, mock = load(_stamp())
     today = date.today()
     df = prepare(prog)
 
     sec_pct = {s: pct(g.f_actual.sum(), g.f_qty.sum()) for s, g in df.groupby("section")}
     overall = pct(df.f_actual.sum(), df.f_qty.sum())
-    exc = df[df.group == "Excavation"]
     status = {r.section: section_status(r._asdict(), sec_pct.get(r.section, 0.0)) for r in sections.itertuples()}
     stalled = sum(1 for v in status.values() if v in STALLED)
     live = issues[issues.status == "Open"]
-    overdue = int(sum(1 for r in live.itertuples() if pd.notna(r.due) and r.due < today))
     open_n = {}
     for r in live.itertuples():
         for s in [x.strip() for x in str(r.section).split(",")]:
@@ -420,20 +549,18 @@ def render():
     st.markdown(f"""<div class='topbar'><div class='brand'><span class='logo'></span><div><b>Natun Bazar</b>
 <small>Dhaka MRT Line-1, Station 08 · utility relocation since December 2024</small></div></div>
 <span class='tag'>{e(asof)}</span></div>""", unsafe_allow_html=True)
-    page = st.radio("Page", ["Overview", "Utilities", "Issues", "Contractors"], horizontal=True, label_visibility="collapsed", key="nav")
+    page = st.radio("Page", ["Overview", "Utilities", "Issues", "Contractors", "Dependencies"], horizontal=True, label_visibility="collapsed", key="nav")
 
     if page == "Overview":
         st.markdown(f"""<div class='hero'><div class='ringcard'>{ring(overall)}<div><div class='tl'>Overall progress</div>
 <div class='ts'>Weighted by factored length across all {len(sections)} sections</div></div></div>
-<div class='tiles'>{tile("Excavation", f"{pct(exc.f_actual.sum(), exc.f_qty.sum()):.0f}%", "of trench length open", CY)}
-{tile("Stalled sections", f"{stalled} / {len(sections)}", "on hold or blocked", AMB)}
-{tile("Open issues", len(live), f"of {len(issues)} logged", VIO)}
-{tile("Past committed date", overdue, "open issues overdue", PINK if overdue else MINT)}</div></div>""", unsafe_allow_html=True)
+<div class='tiles'>{tile("Stalled sections", f"{stalled} / {len(sections)}", "on hold or blocked", AMB)}
+{tile("Open issues", len(live), f"of {len(issues)} logged", VIO)}</div></div>""", unsafe_allow_html=True)
 
         st.markdown("<h3 class='sec'>Corridor plan, south to north</h3>", unsafe_allow_html=True)
         legend = "".join(f"<span><b style='background:{c};box-shadow:0 0 8px {c}'></b>{n}</span>" for n, c in COL.items())
         components.html(f"<style>{PLAN_CSS}</style><div class='w'>{plan_svg(sections, sec_pct, open_n)}"
-                        f"<div class='lg'>{legend}<span>Hatched = stalled</span><span>Circle = open issues</span></div></div>", height=545)
+                        f"<div class='lg'>{legend}</div></div>", height=545)
 
         st.markdown("<h3 class='sec'>Needs attention</h3>", unsafe_allow_html=True)
         top = sorted(live.itertuples(), key=lambda r: (PRIORITY.get(r.priority, 3), r.raised))[:4]
@@ -442,7 +569,6 @@ def render():
     elif page == "Utilities":
         st.markdown("<h3 class='sec'>Utility progress by section</h3>", unsafe_allow_html=True)
         st.markdown(matrix(df, sections, sec_pct, status), unsafe_allow_html=True)
-        st.caption("Percent of factored length complete. Dash means the utility is not in that section's scope. Bottom row and right column are weighted totals.")
         st.markdown("<h3 class='sec'>Section detail</h3>", unsafe_allow_html=True)
         for s in sections.itertuples():
             with st.expander(f"{s.name}: {sec_pct.get(s.section, 0):.0f}% · {status[s.section].lower()} · {s.chainage}"):
@@ -464,6 +590,10 @@ def render():
         st.markdown(f"<h3 class='sec'>{len(v)} issue{'s' if len(v) != 1 else ''}</h3>", unsafe_allow_html=True)
         st.markdown("".join(issue_html(r, today) for r in v) or "<div class='panel'>No issues match these filters.</div>", unsafe_allow_html=True)
         st.caption("Stripe: pink high, amber medium, grey low. Owner is who must act; 'via' is who we chase them through.")
+
+    elif page == "Dependencies":
+        st.markdown("<h3 class='sec'>Dependencies — what waits on what</h3>", unsafe_allow_html=True)
+        dependency_table(df, sections, status, sec_pct, deps)
 
     else:
         st.markdown("<h3 class='sec'>Contractors by package</h3>", unsafe_allow_html=True)
