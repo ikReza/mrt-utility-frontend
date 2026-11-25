@@ -29,12 +29,21 @@ h1{margin:0;font:600 22px/1.2 var(--sans);letter-spacing:-.01em;white-space:nowr
 .map{position:relative;margin-bottom:12px}
 .map-top{display:flex;align-items:center;gap:10px;padding:8px 14px;border-bottom:1px solid var(--line)}
 .frame{position:relative;height:var(--map-h);padding:var(--map-pad) 0;overflow:hidden;background:#fff;border-radius:0 0 10px 10px}
-.canvas{position:relative;height:100%;line-height:0}
-.canvas img{width:100%;height:100%;object-fit:fill;display:block}
-.box{position:absolute;border:1.5px solid currentColor;border-radius:4px;cursor:pointer;z-index:2}
-.box.crit{outline:1.5px dashed var(--crit);outline-offset:2px}
-.box.on{box-shadow:0 0 0 1px #fff,0 0 0 3px currentColor;z-index:6}
-.box.pin{border-width:3px;z-index:7}
+.canvas{position:relative;height:100%;line-height:0;display:flex;gap:6px}
+.view{position:relative;overflow:hidden;height:100%;flex:1 1 0;min-width:0}
+.view.inset{flex:0 0 auto;width:auto;border-left:1.5px dashed var(--line2);padding-left:6px;box-sizing:content-box}
+.view img{position:absolute;max-width:none;display:block;object-fit:fill}
+.view .vt{position:absolute;left:10px;bottom:4px;z-index:5;font:600 9px/1.3 var(--mono);background:rgba(255,255,255,.92);border:1px solid var(--line2);border-radius:4px;padding:1px 6px}
+.box.shape{inset:0;border:0;border-radius:0;pointer-events:none;background:none!important}
+.box.shape.on,.box.shape.pin{box-shadow:none;border:0}.box.shape.crit{outline:0}
+.box.shape svg{position:absolute;left:0;top:0;width:100%;height:100%;overflow:visible;pointer-events:none}
+.box.shape path{pointer-events:auto;cursor:pointer;stroke:currentColor;stroke-width:.75;stroke-opacity:.35;stroke-linejoin:round}
+.box.shape.on path{stroke-width:1.5;stroke-opacity:1}
+.box.shape.pin path{stroke-width:2.5;stroke-opacity:1}
+.box.shape .bchip{left:0;top:0;transform:translate(-50%,-50%);pointer-events:none}
+.box{position:absolute;border:.75px solid color-mix(in srgb,currentColor 35%,transparent);border-radius:4px;cursor:pointer;z-index:2}
+.box.on{border-color:currentColor;box-shadow:0 0 0 .75px currentColor;z-index:6}
+.box.pin{border-color:currentColor;box-shadow:0 0 0 1.75px currentColor;z-index:7}
 .bchip{position:absolute;left:3px;top:3px;display:flex;align-items:center;gap:5px;background:rgba(255,255,255,.95);
  border:1px solid var(--line2);border-radius:5px;padding:2px 6px;font:600 10px/1.25 var(--mono);white-space:nowrap;z-index:3}
 .bchip b{font-weight:700}
@@ -105,6 +114,8 @@ td{padding:9px 16px;border-bottom:1px solid var(--line);font-size:12.5px;vertica
 tr:last-child td{border-bottom:0}
 td.ag{font-weight:600;white-space:nowrap}
 td.ag .dot{margin-right:8px;vertical-align:-1px}
+.it{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+.it span{font:500 9.5px var(--mono);color:#57534A;background:#F1EFE7;border:1px solid #C9C4B3;border-radius:999px;padding:1px 7px}
 td.dts{font:500 10.5px var(--mono);color:#57534A;white-space:nowrap}
 td.dts small{display:block;color:var(--muted);font-size:9.5px;margin-top:2px}
 td.pr{min-width:190px}
@@ -143,13 +154,14 @@ td.pr .n{font:600 11px var(--mono);margin-bottom:4px}
   <div class="card map" id="mapcard">
     <div class="map-top"><span class="lbl">Corridor schematic</span></div>
     <div class="frame" id="frame">
-      <div class="canvas" id="canvas"><img id="img" alt="station corridor"></div>
+      <div class="canvas" id="canvas"></div>
     </div>
     <div class="card tip" id="tip"></div>
   </div>
 
   <div class="secs" id="secs"></div>
   <div class="card detail" id="detail"></div>
+  <div class="card detail" id="prelim" style="display:none"></div>
 </div>
 
 <script>
@@ -165,6 +177,9 @@ let gpin = null, ghover = null;     // corridor group (West / East / Road crossi
 const G = {}; (P.groups || []).forEach(g => G[g.name] = g);
 
 const sec = k => P.sections[k] || {actual:0, planned:0, status:'Not started', tasks:[], start:'—', end:'—'};
+const lenHtml = t => t.total > 0 ? `${fmtLen(t.total)} lm<small>done ${fmtLen(t.done)} lm</small>` : '<span style="color:var(--muted)">—</span>';
+const fmtLen = n => Number(n).toLocaleString('en-US', {maximumFractionDigits: 1});
+const itemHtml = s => s ? '<div class="it">' + String(s).split(/\s*[;|]\s*/).filter(Boolean).map(x => '<span>' + esc(x) + '</span>').join('') + '</div>' : '';
 const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');
 const rgba = (hex, a) => { const n = parseInt(hex.slice(1), 16);
   return 'rgba(' + (n>>16&255) + ',' + (n>>8&255) + ',' + (n&255) + ',' + a + ')'; };
@@ -179,24 +194,116 @@ const pill = s => '<span class="pill" style="color:' + SC[s] + ';border-color:' 
  $('#ovbar').innerHTML = bar(P.overall, null, '#2E7D46');
 
 /* map */
- $('#img').src = P.image;
 const canvas = $('#canvas'), frame = $('#frame'), tip = $('#tip'), mapcard = $('#mapcard');
-keys.forEach(key => {
-  const b = P.boxes[key], s = sec(key), c = b.color;
-  const el = document.createElement('div');
-  el.className = 'box p-' + (b.chip || 'tl') + (b.critical ? ' crit' : '') + (b.w < 8 ? ' narrow' : '');
-  el.dataset.k = key;
-  el.style.color = c;
-  el.style.left = b.x + '%'; el.style.top = b.y + '%';
-  el.style.width = b.w + '%'; el.style.height = b.h + '%';
-  el.style.background = 'linear-gradient(90deg,' + rgba(c,.2) + ' ' + s.actual + '%,' + rgba(c,.05) + ' ' + s.actual + '%)';   // light fill (progress shade)
-  el.innerHTML = `<span class="bchip"><span class="st" style="background:${SC[s.status]}"></span>${b.short}<b>${Math.round(s.actual)}%</b></span>`;
-  el.onmouseenter = () => { hover = key; refresh(); showTip(key); };
-  el.onmousemove = ev => moveTip(ev);
-  el.onmouseleave = () => { hover = null; tip.style.display = 'none'; refresh(); };
-  el.onclick = ev => { ev.stopPropagation(); gpin = null; pinned = (pinned === key ? null : key); refresh(); };
-  canvas.appendChild(el);
+if (P.map_h) document.documentElement.style.setProperty('--map-h', P.map_h);
+/* views = crop windows onto ONE image (stations.json "views": [{crop:[x,y,w,h] in % of the image, title}]).
+   The first view is the main strip; later views are miniature insets (true aspect). Boxes/paths are always
+   given in full-image %, so the same box is drawn in every view it overlaps. */
+const VIEWS = (P.views && P.views.length) ? P.views : [{crop: [0, 0, 100, 100]}];
+const FILL = 0.10;                 // box tint: change here to make all boxes lighter / darker
+let natAR = 0;
+const shapes = [];
+const NS = 'http://www.w3.org/2000/svg';
+const clamp01 = v => Math.max(0, Math.min(1, v));
+
+function hoverOn(key)  { hover = key; refresh(); showTip(key); }
+function wire(target, key) {
+  target.onmouseenter = () => hoverOn(key);
+  target.onmousemove = ev => moveTip(ev);
+  target.onmouseleave = () => { hover = null; tip.style.display = 'none'; refresh(); };
+  target.onclick = ev => { ev.stopPropagation(); gpin = null; pinned = (pinned === key ? null : key); refresh(); };
+}
+function chipHtml(s, b) { return `<span class="st" style="background:${SC[s.status]}"></span>${b.short}<b>${Math.round(s.actual)}%</b>`; }
+
+VIEWS.forEach((v, vi) => {
+  const [cx, cy, cw, ch] = v.crop;
+  const vel = document.createElement('div');
+  vel.className = 'view' + (vi ? ' inset' : '');
+  const im = document.createElement('img');
+  im.alt = ''; im.src = P.image;
+  im.style.left = (-cx / cw * 100) + '%'; im.style.top = (-cy / ch * 100) + '%';
+  im.style.width = (10000 / cw) + '%'; im.style.height = (10000 / ch) + '%';
+  im.addEventListener('load', () => { natAR = im.naturalWidth / im.naturalHeight; sizeInsets(); layoutShapes(); fit(); });
+  vel.appendChild(im);
+  if (v.title) { const t = document.createElement('div'); t.className = 'vt'; t.textContent = v.title; vel.appendChild(t); }
+  canvas.appendChild(vel);
+  v.el = vel;
+
+  keys.forEach(key => {
+    const b = P.boxes[key], s = sec(key), c = b.color;
+    if (b.path && b.path.length > 1) {                              // curved / free-form corridor
+      const xs = b.path.map(p => p[0]), ys = b.path.map(p => p[1]);
+      if (Math.max(...xs) < cx || Math.min(...xs) > cx + cw || Math.max(...ys) < cy || Math.min(...ys) > cy + ch) return;
+      const el = document.createElement('div');
+      el.className = 'box shape' + (b.critical ? ' crit' : '');
+      el.dataset.k = key; el.style.color = c;
+      const svg = document.createElementNS(NS, 'svg');
+      const defs = document.createElementNS(NS, 'defs');
+      const gid = 'g_' + key.replace(/\W/g, '_') + '_' + vi;
+      const lg = document.createElementNS(NS, 'linearGradient');
+      lg.setAttribute('id', gid); lg.setAttribute('gradientUnits', 'userSpaceOnUse');
+      [[0, FILL], [100, FILL]].forEach(([o, a]) => {
+        const st = document.createElementNS(NS, 'stop');
+        st.setAttribute('offset', o + '%'); st.setAttribute('stop-color', c); st.setAttribute('stop-opacity', a);
+        lg.appendChild(st);
+      });
+      defs.appendChild(lg); svg.appendChild(defs);
+      const path = document.createElementNS(NS, 'path');
+      path.setAttribute('fill', 'url(#' + gid + ')');
+      svg.appendChild(path); el.appendChild(svg);
+      const chip = document.createElement('span');
+      chip.className = 'bchip'; chip.innerHTML = chipHtml(s, b);
+      el.appendChild(chip);
+      wire(path, key);
+      vel.appendChild(el);
+      shapes.push({el, path, lg, chip, b, crop: v.crop, vel});
+      return;
+    }
+    const x0 = Math.max(b.x, cx), y0 = Math.max(b.y, cy), x1 = Math.min(b.x + b.w, cx + cw), y1 = Math.min(b.y + b.h, cy + ch);
+    if (x1 <= x0 || y1 <= y0) return;                               // box is outside this view
+    const el = document.createElement('div');
+    const wv = (x1 - x0) / cw * 100;
+    el.className = 'box p-' + (b.chip || 'tl') + (b.critical ? ' crit' : '') + (wv < 8 ? ' narrow' : '');
+    el.dataset.k = key; el.style.color = c;
+    el.style.left = ((x0 - cx) / cw * 100) + '%'; el.style.top = ((y0 - cy) / ch * 100) + '%';
+    el.style.width = wv + '%'; el.style.height = ((y1 - y0) / ch * 100) + '%';
+    el.style.background = rgba(c, FILL);                          // always the same light tint (no progress shading)
+    el.innerHTML = `<span class="bchip">${chipHtml(s, b)}</span>`;
+    wire(el, key);
+    vel.appendChild(el);
+  });
 });
+
+function sizeInsets() {
+  if (!natAR) return;
+  VIEWS.forEach((v, vi) => { if (vi) v.el.style.aspectRatio = String(natAR * v.crop[2] / v.crop[3]); });
+}
+function ribbon(pts, t) {                                          // centre-line (px) -> closed outline of width t
+  const L = [], R = [], n = pts.length;
+  for (let i = 0; i < n; i++) {
+    const a = pts[Math.max(i - 1, 0)], c = pts[Math.min(i + 1, n - 1)], p = pts[i];
+    const dx = c[0] - a[0], dy = c[1] - a[1], m = Math.hypot(dx, dy) || 1;
+    const nx = -dy / m * t / 2, ny = dx / m * t / 2;
+    L.push([p[0] + nx, p[1] + ny]); R.push([p[0] - nx, p[1] - ny]);
+  }
+  const f = q => q[0].toFixed(1) + ',' + q[1].toFixed(1);
+  return 'M' + L.map(f).join('L') + 'L' + R.reverse().map(f).join('L') + 'Z';
+}
+function layoutShapes() {
+  shapes.forEach(S => {
+    const [cx, cy, cw, ch] = S.crop, r = S.vel.getBoundingClientRect(), W = r.width, H = r.height;
+    if (!W || !H) return;
+    const px = S.b.path.map(p => [(p[0] - cx) / cw * W, (p[1] - cy) / ch * H]);
+    S.path.setAttribute('d', ribbon(px, (S.b.thick || 8) / ch * H));
+    const a = px[0], z = px[px.length - 1];
+    S.lg.setAttribute('x1', a[0]); S.lg.setAttribute('y1', a[1]);
+    S.lg.setAttribute('x2', z[0]); S.lg.setAttribute('y2', z[1]);
+    const i = Math.round(clamp01(S.b.chip_t == null ? .5 : S.b.chip_t) * (px.length - 1));
+    S.chip.style.left = px[i][0] + 'px'; S.chip.style.top = px[i][1] + 'px';
+  });
+}
+try { new ResizeObserver(layoutShapes).observe(canvas); } catch (e) {}
+layoutShapes();
 frame.onclick = () => { pinned = null; gpin = null; refresh(); };
 document.addEventListener('keydown', e => { if (e.key === 'Escape') { pinned = null; gpin = null; refresh(); } });
 
@@ -290,11 +397,11 @@ function renderDetail(key) {
   </div>
   <div class="dbar">${bar(s.actual, s.planned, SC[s.status])}</div>
   <div style="overflow-x:auto"><table>
-    <tr><th>Agency</th><th>Work</th><th>Weight</th><th>Schedule</th><th>Progress</th><th>Status</th></tr>
+    <tr><th>Agency</th><th>Work</th><th>Length</th><th>Schedule</th><th>Progress</th><th>Status</th></tr>
     ${(s.tasks || []).map(t => `<tr>
       <td class="ag"><i class="dot" style="background:${t.color}"></i>${esc(t.org || t.agency)}</td>
-      <td>${esc(t.desc)}${t.remarks ? `<div class="rm">⚠ ${esc(t.remarks)}</div>` : ''}</td>
-      <td class="dts">×${t.weight}<small>${t.wlen} lm</small></td>
+      <td>${esc(t.desc)}${itemHtml(t.item)}${t.remarks ? `<div class="rm">⚠ ${esc(t.remarks)}</div>` : ''}</td>
+      <td class="dts">${lenHtml(t)}</td>
       <td class="dts">${t.start} → ${t.end}<small>${t.days} days</small></td>
       <td class="pr"><div class="n">${t.actual}%</div>${bar(t.actual, t.planned, t.color, 'sm')}</td>
       <td>${pill(t.status)}</td></tr>`).join('')}
@@ -302,6 +409,21 @@ function renderDetail(key) {
   const x = document.getElementById('clx');
   if (x) x.onclick = () => { pinned = null; gpin = null; refresh(); };
 }
+function renderPrelim() {
+  const L = P.prelim || [], el = $('#prelim');
+  if (!L.length) return;
+  el.style.display = '';
+  el.innerHTML = L.map(s => `<div class="dh"><div><h2>${esc(s.name)} works ${pill(s.status)}</h2></div>
+    <div class="dr"><div class="pc">${Math.round(s.actual)}%<small>PLAN ${Math.round(s.planned)}%</small></div></div></div>
+    <div style="overflow-x:auto"><table><tr><th>Agency</th><th>Work</th><th>Length</th><th>Schedule</th><th>Progress</th><th>Status</th></tr>
+    ${s.tasks.map(t => `<tr><td class="ag"><i class="dot" style="background:${t.color}"></i>${esc(t.agency)}</td>
+      <td>${esc(t.desc)}${itemHtml(t.item)}${t.remarks ? `<div class="rm">⚠ ${esc(t.remarks)}</div>` : ''}</td>
+      <td class="dts">${lenHtml(t)}</td>
+      <td class="dts">${t.start} → ${t.end}<small>${t.days} days</small></td>
+      <td class="pr"><div class="n">${t.actual}%</div>${bar(t.actual, t.planned, t.color, 'sm')}</td>
+      <td>${pill(t.status)}</td></tr>`).join('')}</table></div>`).join('');
+}
+renderPrelim();
 function renderPlaceholder() {
   $('#detail').innerHTML = '<div class="ph">Click a corridor on the schematic — or a card above — to open its agency-wise work list. Click West / East / Road crossing for the whole corridor.</div>';
 }
@@ -333,7 +455,6 @@ function fit() {
 }
 window.addEventListener('resize', fit);
 window.addEventListener('load', fit);
- $('#img').addEventListener('load', fit);
 try { new ResizeObserver(fit).observe($('#page')); } catch (e) {}
 refresh(); setTimeout(fit, 300); setTimeout(fit, 900);
 </script>

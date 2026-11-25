@@ -8,11 +8,20 @@ Reads:
     images/...           wide corridor drawings (paths from stations.json)
 
 Progress % = done_len ÷ total_len × 100 for a single work item.
+The web table shows the REAL total_len / done_len (lm); weight is only used inside the % roll-ups.
 Roll-ups (section / station) are WEIGHTED: Σ(done_len × weight) ÷ Σ(total_len × weight).
   total_len = actual length (lm)      weight = effort factor (default 1; BTCL / private cables 0.5)
   e.g. 255 lm BTCL at weight 0.5 counts as 127.5 lm in the section total.
 done_len is entered in actual lm and can never exceed total_len.
 Planned % (black tick on bars) comes from schedule dates + the "Status as of" date.
+stations.json extras (all optional):
+    "views":  [{"crop":[x,y,w,h]}, {"crop":[...], "title":"..."}]   crop windows (% of the image); first = main strip,
+              the others are miniature insets with true aspect (e.g. one long vertical strip)
+    box "dir":"v"                          progress shade runs top->bottom instead of left->right
+    box "curve":{"x","w","y","sag","shape"} bent corridor; shape = beam | fixed | parabola; y = centre-line at the ends
+    box "path":[[x,y],...]                  free-form centre-line (smoothed);  "thickness" = width in % of image height
+    "map_h": "340px"                        taller schematic for this station (default clamp(220px,18vw,360px))
+    box "chip_at": 0..1                     where along a curved corridor the % chip sits
 HTML template: utils/schedule_template.html  (__DATA__ placeholder gets the payload).
 """
 import base64
@@ -70,6 +79,9 @@ def load_tasks() -> pd.DataFrame:
     if "remarks" not in df.columns:
         df["remarks"] = ""
     df["remarks"] = df["remarks"].fillna("").astype(str)
+    if "item" not in df.columns:                      # optional column: sub-parts of a work row
+        df["item"] = ""
+    df["item"] = df["item"].fillna("").astype(str).str.strip()
 
     # a mistyped date in the sheet would otherwise crash the page: skip those rows, but say so
     bad = df["start"].isna() | df["end"].isna()
@@ -166,7 +178,8 @@ def section_payload(df: pd.DataFrame) -> dict:
             tip=tip_groups(g),
             tasks=[dict(agency=r.agency, desc=r.description,
                         start=r.start.strftime("%d %b"), end=r.end.strftime("%d %b"),
-                        weight=float(r.weight), wlen=round(float(r.w_total), 1),
+                        item=r.item,
+                        total=round(float(r.total_len), 1), done=round(float(r.done_len), 1),   # real lm (no weight)
                         days=int(r.days), actual=round(r.actual_pct), planned=round(r.planned_pct),
                         color=AGENCY_COLOR.get(r.cls, "#57534A"), remarks=r.remarks.strip(),
                         status=status(r.actual_pct, r.planned_pct))
@@ -199,11 +212,78 @@ def group_payload(df: pd.DataFrame, station: dict) -> list:
     return out
 
 
+def prelim_payload(df: pd.DataFrame) -> list:
+    """Rows whose section has no box on the drawing (Preliminary works etc.), one table row each."""
+    out = []
+    for sec_name, g in df.groupby("section", sort=False):
+        a = length_pct(g)
+        if a is None:
+            a = wavg(g, "actual_pct")
+        p = wavg(g, "planned_pct")
+        out.append(dict(name=sec_name, actual=round(a, 1), planned=round(p, 1), status=status(a, p),
+                        tasks=[dict(agency=r.agency, desc=r.description, item=r.item,
+                                    total=round(float(r.total_len), 1), done=round(float(r.done_len), 1),
+                                    start=r.start.strftime("%d %b"), end=r.end.strftime("%d %b"),
+                                    days=int(r.days), actual=round(r.actual_pct), planned=round(r.planned_pct),
+                                    color=AGENCY_COLOR.get(r.cls, "#57534A"), remarks=r.remarks.strip(),
+                                    status=status(r.actual_pct, r.planned_pct))
+                               for r in g.sort_values("start").itertuples()]))
+    return out
+
+
+def _beam(t: float, shape: str) -> float:
+    """Normalised deflection 0..1..0 along a span (t = 0..1)."""
+    if shape == "parabola":
+        return 4 * t * (1 - t)
+    t = min(t, 1 - t)
+    if shape == "fixed":                       # both ends clamped, point load at mid-span
+        return 12 * t * t - 16 * t ** 3
+    return 3 * t - 4 * t ** 3                  # "beam": simply supported, point load at mid-span
+
+
+def _smooth(pts: list, per: int = 10) -> list:
+    """Catmull-Rom smoothing of a hand-drawn point list -> dense polyline."""
+    if len(pts) < 3:
+        return pts
+    P = [pts[0]] + pts + [pts[-1]]
+    out = []
+    for i in range(1, len(P) - 2):
+        p0, p1, p2, p3 = P[i - 1], P[i], P[i + 1], P[i + 2]
+        for k in range(per):
+            u = k / per
+            out.append([round(0.5 * ((2 * p1[j]) + (-p0[j] + p2[j]) * u
+                                     + (2 * p0[j] - 5 * p1[j] + 4 * p2[j] - p3[j]) * u ** 2
+                                     + (-p0[j] + 3 * p1[j] - 3 * p2[j] + p3[j]) * u ** 3), 3) for j in (0, 1)])
+    out.append(list(pts[-1]))
+    return out
+
+
+def box_path(b: dict):
+    """Curved corridor: either "path": [[x,y],...] (smoothed) or "curve": {x, w, y, sag, shape}."""
+    c = b.get("curve")
+    if c:
+        n = int(c.get("n", 28))
+        return [[round(c["x"] + c["w"] * i / n, 3),
+                 round(c["y"] + c.get("sag", 0) * _beam(i / n, c.get("shape", "beam")), 3)] for i in range(n + 1)]
+    if b.get("path"):
+        return _smooth([list(map(float, q)) for q in b["path"]])
+    return None
+
+
 def build_payload(df: pd.DataFrame, station_id: str, station: dict) -> dict:
+    box_keys = set(station["boxes"])
+    prelim_df = df[~df["section"].isin(box_keys)]       # e.g. "Preliminary" - no box on the drawing
+    df = df[df["section"].isin(box_keys)]               # roll-ups use corridors that have a box
     secs = section_payload(df)
     boxes = {}
     for i, (k, b) in enumerate(station["boxes"].items()):
+        path = box_path(b)
+        if path:                                           # bounding box of the curve (used for sizing only)
+            xs, ys = [q[0] for q in path], [q[1] for q in path]
+            b = {**b, "x": min(xs), "y": min(ys), "w": max(xs) - min(xs), "h": max(ys) - min(ys)}
         boxes[k] = dict(x=b["x"], y=b["y"], w=b["w"], h=b["h"],
+                        path=path, thick=b.get("thickness", 8), chip_t=b.get("chip_at", 0.5),
+                        dir=b.get("dir", "h"),
                         group=b.get("group", ""),
                         color=b.get("color", SEC_PALETTE[i % len(SEC_PALETTE)]),
                         critical=bool(b.get("critical", False)),
@@ -221,6 +301,9 @@ def build_payload(df: pd.DataFrame, station_id: str, station: dict) -> dict:
         overall=round(ov, 1),
         status=STATUS_COLOR, sections=secs, boxes=boxes,
         groups=group_payload(df, station),
+        views=station.get("views") or [{"crop": [0, 0, 100, 100]}],
+        map_h=station.get("map_h"),
+        prelim=prelim_payload(prelim_df),
         defaultSection=next(iter(boxes)),           # first corridor open on load
         image=image_uri(ROOT / station["image"]),
     )

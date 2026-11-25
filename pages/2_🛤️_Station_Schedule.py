@@ -56,7 +56,10 @@ tasks = enrich(load_tasks(), pd.Timestamp(csv_asof()))   # tick date = CSV last 
 df = tasks[tasks["station"] == station_id]
 
 if df.empty:
-    st.warning(f"No tasks found for {station_id} in data/tasks.csv.")
+    found = ", ".join(sorted(tasks["station"].dropna().unique())) if not tasks.empty else "none"
+    st.warning(f"No tasks found for {station_id}. Stations currently in the data: {found}. "
+               f"The app reads the Google Sheet first (data/tasks.csv is only the offline fallback), "
+               f"so add the {station_id} rows to the Google Sheet. It refreshes within about 60 seconds.")
     st.stop()
 
 render_dashboard(build_payload(df, station_id, stations[station_id]))

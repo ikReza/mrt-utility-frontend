@@ -23,7 +23,7 @@ TIMEZONE = "Asia/Dhaka"
 
 REQUIRED = ["station", "section", "cls", "agency", "description",
             "start", "end", "total_len", "weight", "done_len"]
-OPTIONAL = ["remarks", "actual_pct"]       # kept if you add these columns to the sheet
+OPTIONAL = ["remarks", "actual_pct", "item"]   # kept if present. item = sub-part of a work row (shown on the web)
 
 _URLS = [
     f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/gviz/tq?tqx=out:csv&sheet={SHEET_NAME}",

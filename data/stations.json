@@ -2,39 +2,491 @@
   "S08": {
     "name": "S08 – Natun Bazar",
     "image": "images/S08-Natun Bazar.jpg",
-    "meta": ["MRT Line-1", "≈ 750 m per side"],
+    "meta": [
+      "MRT Line-1",
+      "≈ 750 m per side"
+    ],
     "boxes": {
-      "Section-1": {"x": 0.0,  "y": 10.0, "w": 33.0,  "h": 25.0, "group": "West corridor", "color": "#1F6FEB", "chip": "bl"},
-      "Section-2": {"x": 39.0, "y": 12.0, "w": 56.0,  "h": 22.0, "group": "West corridor", "color": "#8E44AD", "chip": "tl"},
-      "Section-3": {"x": 2.0,  "y": 66.0, "w": 18.5,  "h": 22.0, "group": "East corridor", "color": "#E67E22", "chip": "tl"},
-      "Section-4": {"x": 21.5, "y": 75.0, "w": 11.5,  "h": 25.0, "group": "East corridor", "color": "#8C564B", "chip": "tr"},
-      "Section-5": {"x": 39.0, "y": 68.0, "w": 58.0,  "h": 28.0, "group": "East corridor", "color": "#16A085", "critical": true, "chip": "bl"},
-      "Section-6": {"x": 33.0, "y": 15.0, "w": 5.5,   "h": 80.0, "group": "Road crossing", "color": "#C2185B", "chip": "c"},
-      "Section-7": {"x": 95.2, "y": 15.0, "w": 4.8,   "h": 58.0, "group": "Road crossing", "color": "#566573", "chip": "c"}
+      "Section-1": {
+        "x": 0.0,
+        "y": 10.0,
+        "w": 33.0,
+        "h": 25.0,
+        "group": "West corridor",
+        "color": "#1F6FEB",
+        "chip": "bl"
+      },
+      "Section-2": {
+        "x": 39.0,
+        "y": 12.0,
+        "w": 56.0,
+        "h": 22.0,
+        "group": "West corridor",
+        "color": "#8E44AD",
+        "chip": "tl"
+      },
+      "Section-3": {
+        "x": 2.0,
+        "y": 66.0,
+        "w": 18.5,
+        "h": 22.0,
+        "group": "East corridor",
+        "color": "#E67E22",
+        "chip": "tl"
+      },
+      "Section-4": {
+        "x": 21.5,
+        "y": 75.0,
+        "w": 11.5,
+        "h": 25.0,
+        "group": "East corridor",
+        "color": "#8C564B",
+        "chip": "tr"
+      },
+      "Section-5": {
+        "x": 39.0,
+        "y": 68.0,
+        "w": 58.0,
+        "h": 28.0,
+        "group": "East corridor",
+        "color": "#16A085",
+        "critical": true,
+        "chip": "bl"
+      },
+      "Section-6": {
+        "x": 33.0,
+        "y": 15.0,
+        "w": 5.5,
+        "h": 80.0,
+        "group": "Road crossing",
+        "color": "#C2185B",
+        "chip": "c"
+      },
+      "Section-7": {
+        "x": 95.2,
+        "y": 15.0,
+        "w": 4.8,
+        "h": 58.0,
+        "group": "Road crossing",
+        "color": "#566573",
+        "chip": "c"
+      }
     }
   },
   "S07": {
     "name": "S07 – North Badda",
     "image": "images/S07-North Badda.jpg",
-    "meta": ["MRT Line-1", "≈ 340 m per side"],
+    "meta": [
+      "MRT Line-1",
+      "≈ 340 m per side"
+    ],
     "boxes": {
-      "Corridor-1": {"x": 0.5,  "y": 13.0,  "w": 97.0, "h": 12.0, "group": "West corridor", "color": "#1F6FEB", "chip": "c"},
-      "Corridor-2": {"x": 0.5,  "y": 30.0, "w": 97.0, "h": 15.0, "group": "West corridor", "color": "#8E44AD", "chip": "c"},
-      "Corridor-3": {"x": 0.5,  "y": 60.0, "w": 97.0, "h": 15.0, "group": "East corridor", "color": "#E67E22", "chip": "c"},
-      "Corridor-4": {"x": 0.5,  "y": 81.0, "w": 97.0, "h": 12.0, "group": "East corridor", "color": "#8C564B", "chip": "c"},
-      "Corridor-5": {"x": 96.5, "y": 0.0,  "w": 3.0,  "h": 99.0, "group": "Road crossing", "color": "#E0348A", "chip": "br"}
+      "Corridor-1": {
+        "x": 0.5,
+        "y": 13.0,
+        "w": 97.0,
+        "h": 12.0,
+        "group": "West corridor",
+        "color": "#1F6FEB",
+        "chip": "c"
+      },
+      "Corridor-2": {
+        "x": 0.5,
+        "y": 30.0,
+        "w": 97.0,
+        "h": 15.0,
+        "group": "West corridor",
+        "color": "#8E44AD",
+        "chip": "c"
+      },
+      "Corridor-3": {
+        "x": 0.5,
+        "y": 60.0,
+        "w": 97.0,
+        "h": 15.0,
+        "group": "East corridor",
+        "color": "#E67E22",
+        "chip": "c"
+      },
+      "Corridor-4": {
+        "x": 0.5,
+        "y": 81.0,
+        "w": 97.0,
+        "h": 12.0,
+        "group": "East corridor",
+        "color": "#8C564B",
+        "chip": "c"
+      },
+      "Corridor-5": {
+        "x": 96.5,
+        "y": 0.0,
+        "w": 3.0,
+        "h": 99.0,
+        "group": "Road crossing",
+        "color": "#E0348A",
+        "chip": "br"
+      }
     }
   },
   "S06": {
     "name": "S06 – Badda",
     "image": "images/S06-Badda.jpg",
-    "meta": ["MRT Line-1", "≈ 360 m per side"],
+    "meta": [
+      "MRT Line-1",
+      "≈ 360 m per side"
+    ],
     "boxes": {
-      "Corridor-1": {"x": 3.5, "y": 10.0,  "w": 96.0, "h": 15.0, "group": "West corridor", "color": "#1F6FEB", "chip": "c"},
-      "Corridor-2": {"x": 3.5, "y": 32.0, "w": 95.5, "h": 15.0, "group": "West corridor", "color": "#8E44AD", "chip": "c"},
-      "Corridor-3": {"x": 3.5, "y": 59.0, "w": 90.5, "h": 15.0, "group": "East corridor", "color": "#E67E22", "chip": "c"},
-      "Corridor-4": {"x": 3.5, "y": 82.0, "w": 90.0, "h": 12.0, "group": "East corridor", "color": "#8C564B", "chip": "c"},
-      "Corridor-5": {"x": 0.1, "y": 4.0,  "w": 4.5,  "h": 90.0, "group": "Road crossing", "color": "#E0348A", "chip": "c"}
+      "Corridor-1": {
+        "x": 3.5,
+        "y": 10.0,
+        "w": 96.0,
+        "h": 15.0,
+        "group": "West corridor",
+        "color": "#1F6FEB",
+        "chip": "c"
+      },
+      "Corridor-2": {
+        "x": 3.5,
+        "y": 32.0,
+        "w": 95.5,
+        "h": 15.0,
+        "group": "West corridor",
+        "color": "#8E44AD",
+        "chip": "c"
+      },
+      "Corridor-3": {
+        "x": 3.5,
+        "y": 59.0,
+        "w": 90.5,
+        "h": 15.0,
+        "group": "East corridor",
+        "color": "#E67E22",
+        "chip": "c"
+      },
+      "Corridor-4": {
+        "x": 3.5,
+        "y": 82.0,
+        "w": 90.0,
+        "h": 12.0,
+        "group": "East corridor",
+        "color": "#8C564B",
+        "chip": "c"
+      },
+      "Corridor-5": {
+        "x": 0.1,
+        "y": 4.0,
+        "w": 4.5,
+        "h": 90.0,
+        "group": "Road crossing",
+        "color": "#E0348A",
+        "chip": "c"
+      }
+    }
+  },
+  "S05": {
+    "name": "S05 – Aftab Nagar",
+    "image": "images/S05-Aftab Nagar.jpg",
+    "meta": [
+      "MRT Line-1"
+    ],
+    "boxes": {
+      "Corridor-1": {
+        "curve": {
+          "x": 2.0,
+          "w": 84.0,
+          "y": 10,
+          "sag": 30,
+          "shape": "beam"
+        },
+        "thickness": 10,
+        "group": "West corridor",
+        "color": "#1F6FEB",
+        "chip_at": 0.5
+      },
+      "Corridor-2": {
+        "curve": {
+          "x": 2.0,
+          "w": 94.0,
+          "y": 26,
+          "sag": 24,
+          "shape": "beam"
+        },
+        "thickness": 10,
+        "group": "West corridor",
+        "color": "#8E44AD",
+        "chip_at": 0.5
+      },
+      "Corridor-3": {
+        "curve": {
+          "x": 2.0,
+          "w": 94.0,
+          "y": 46,
+          "sag": 24,
+          "shape": "beam"
+        },
+        "thickness": 10,
+        "group": "East corridor",
+        "color": "#E67E22",
+        "chip_at": 0.5
+      },
+      "Corridor-4": {
+        "curve": {
+          "x": 34.0,
+          "w": 60.0,
+          "y": 84,
+          "sag": 6,
+          "shape": "beam"
+        },
+        "thickness": 10,
+        "group": "East corridor",
+        "color": "#8C564B",
+        "chip_at": 0.5
+      },
+      "Corridor-5": {
+        "x": 1.5,
+        "y": 1.0,
+        "w": 3.0,
+        "h": 70.0,
+        "dir": "v",
+        "group": "Road crossing",
+        "color": "#E0348A",
+        "chip": "bl"
+      },
+      "Corridor-6": {
+        "x": 94.5,
+        "y": 0.0,
+        "w": 3.5,
+        "h": 70.0,
+        "dir": "v",
+        "group": "Road crossing",
+        "color": "#9F1FD1",
+        "chip": "bl"
+      }
+    }
+  },
+  "S04": {
+    "name": "S04 – Rampura",
+    "image": "images/S04-Rampura.jpg",
+    "meta": [
+      "MRT Line-1",
+      "≈ 350 m per side"
+    ],
+    "boxes": {
+      "Corridor-1": {
+        "x": 1.0,
+        "y": 4.0,
+        "w": 94.0,
+        "h": 17.0,
+        "group": "West corridor",
+        "color": "#1F6FEB",
+        "chip": "c"
+      },
+      "Corridor-2": {
+        "x": 1.0,
+        "y": 28.0,
+        "w": 94.0,
+        "h": 16.0,
+        "group": "West corridor",
+        "color": "#8E44AD",
+        "chip": "c"
+      },
+      "Corridor-3": {
+        "x": 1.0,
+        "y": 55.0,
+        "w": 94.0,
+        "h": 16.0,
+        "group": "East corridor",
+        "color": "#E67E22",
+        "chip": "c"
+      },
+      "Corridor-4": {
+        "x": 1.0,
+        "y": 83.0,
+        "w": 94.0,
+        "h": 15.0,
+        "group": "East corridor",
+        "color": "#8C564B",
+        "chip": "c"
+      },
+      "Corridor-5": {
+        "x": 96.6,
+        "y": 5.0,
+        "w": 2.8,
+        "h": 90.0,
+        "group": "Road crossing",
+        "color": "#9F1FD1",
+        "chip": "c"
+      }
+    }
+  },
+  "S03": {
+    "name": "S03 – Malibagh",
+    "image": "images/S03-Malibagh.jpg",
+    "meta": [
+      "MRT Line-1",
+      "≈ 400 m (C1,2) · 330 m (C3,4)"
+    ],
+    "boxes": {
+      "Corridor-1": {
+        "x": 1.0,
+        "y": 3.0,
+        "w": 92.0,
+        "h": 17.0,
+        "group": "West corridor",
+        "color": "#1F6FEB",
+        "chip": "c"
+      },
+      "Corridor-2": {
+        "x": 1.0,
+        "y": 28.0,
+        "w": 92.0,
+        "h": 16.0,
+        "group": "West corridor",
+        "color": "#8E44AD",
+        "chip": "c"
+      },
+      "Corridor-3": {
+        "x": 1.0,
+        "y": 54.0,
+        "w": 92.0,
+        "h": 16.0,
+        "group": "East corridor",
+        "color": "#E67E22",
+        "chip": "c"
+      },
+      "Corridor-4": {
+        "x": 1.0,
+        "y": 80.0,
+        "w": 92.0,
+        "h": 16.0,
+        "group": "East corridor",
+        "color": "#8C564B",
+        "chip": "c"
+      },
+      "Corridor-5": {
+        "x": 95.3,
+        "y": 5.0,
+        "w": 3.0,
+        "h": 90.0,
+        "group": "Road crossing",
+        "color": "#E0348A",
+        "chip": "c"
+      }
+    }
+  },
+  "S02": {
+    "name": "S02 – Rajarbagh",
+    "image": "images/S02-Rajarbagh.jpg",
+    "meta": [
+      "MRT Line-1",
+      "≈ 275 m (C1-3) · 200 m (C4)"
+    ],
+    "map_h": "340px",
+    "views": [
+      {
+        "crop": [
+          0,
+          17,
+          100,
+          24
+        ]
+      },
+      {
+        "crop": [
+          42,
+          33,
+          23.3,
+          55.8
+        ],
+        "title": "Corridor-4 · not to scale"
+      }
+    ],
+    "boxes": {
+      "Corridor-1": {
+        "x": 5.0,
+        "y": 25.5,
+        "w": 36.0,
+        "h": 3.2,
+        "group": "West corridor",
+        "color": "#1F6FEB",
+        "chip": "c"
+      },
+      "Corridor-2": {
+        "x": 5.0,
+        "y": 29.5,
+        "w": 36.0,
+        "h": 3.2,
+        "group": "East corridor",
+        "color": "#8E44AD",
+        "chip": "c"
+      },
+      "Corridor-3": {
+        "x": 5.0,
+        "y": 34.1,
+        "w": 36.0,
+        "h": 3.2,
+        "group": "East corridor",
+        "color": "#E67E22",
+        "chip": "c"
+      },
+      "Corridor-4": {
+        "x": 42.0,
+        "y": 17.0,
+        "w": 7.5,
+        "h": 72.0,
+        "dir": "v",
+        "group": "Road crossing",
+        "color": "#C00000",
+        "chip": "tl"
+      },
+      "Corridor-5": {
+        "x": 0.3,
+        "y": 20.6,
+        "w": 3.5,
+        "h": 16.8,
+        "dir": "v",
+        "group": "Road crossing",
+        "color": "#E0348A",
+        "chip": "c"
+      }
+    }
+  },
+  "S01": {
+    "name": "S01 – Kamlapur",
+    "image": "images/S01-Kamlapur.jpg",
+    "meta": [
+      "MRT Line-1",
+      "≈ 450 m per side"
+    ],
+    "boxes": {
+      "Corridor-1": {
+        "x": 15.0,
+        "y": 52.0,
+        "w": 83.0,
+        "h": 15.0,
+        "group": "West corridor",
+        "color": "#1F6FEB",
+        "chip": "c"
+      },
+      "Corridor-2": {
+        "x": 15.0,
+        "y": 73.0,
+        "w": 83.0,
+        "h": 15.0,
+        "group": "East corridor",
+        "color": "#8E44AD",
+        "chip": "c"
+      },
+      "Corridor-3": {
+        "x": 3.0,
+        "y": 1.0,
+        "w": 10.0,
+        "h": 60.0,
+        "group": "West corridor",
+        "color": "#B23A2E",
+        "critical": true,
+        "chip": "c"
+      }
     }
   }
 }
